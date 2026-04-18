@@ -12,7 +12,6 @@ function crossOriginIsolation(): Plugin {
 		configureServer(server) {
 			server.middlewares.use((_req, res, next) => {
 				const originalWriteHead = res.writeHead.bind(res);
-				// @ts-expect-error overload variants
 				res.writeHead = (...args: Parameters<typeof res.writeHead>) => {
 					res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
 					res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
@@ -25,7 +24,6 @@ function crossOriginIsolation(): Plugin {
 		configurePreviewServer(server) {
 			server.middlewares.use((_req, res, next) => {
 				const originalWriteHead = res.writeHead.bind(res);
-				// @ts-expect-error overload variants
 				res.writeHead = (...args: Parameters<typeof res.writeHead>) => {
 					res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
 					res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
