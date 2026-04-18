@@ -16,13 +16,28 @@ class ExportState {
 	result = $state<ExportResult | null>(null);
 	logs = $state<string[]>([]);
 	abortCtrl: AbortController | null = null;
+	#inFlight: Promise<void> | null = null;
 
 	async start(file: File, inTime: number, outTime: number) {
+		if (this.#inFlight) {
+			this.abortCtrl?.abort();
+			await this.#inFlight.catch(() => {});
+		}
 		this.reset();
 		this.status = 'loading';
 		this.abortCtrl = new AbortController();
 		const signal = this.abortCtrl.signal;
 
+		const run = this.#runExport(file, inTime, outTime, signal);
+		this.#inFlight = run;
+		try {
+			await run;
+		} finally {
+			if (this.#inFlight === run) this.#inFlight = null;
+		}
+	}
+
+	async #runExport(file: File, inTime: number, outTime: number, signal: AbortSignal) {
 		try {
 			const result = await trimVideo(file, {
 				inTime,
