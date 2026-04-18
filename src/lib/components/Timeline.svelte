@@ -126,7 +126,7 @@
 			const name = (err as Error).name;
 			if (name === 'AbortError') return;
 			wfStatus = 'unavailable';
-			console.warn('waveform unavailable', err);
+			if (name !== 'EncodingError') console.warn('waveform failed', err);
 		}
 	}
 
