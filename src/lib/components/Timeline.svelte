@@ -6,7 +6,7 @@
 	import { waveform } from '$lib/state/waveform.svelte';
 	import TrimHandle from './TrimHandle.svelte';
 	import Playhead from './Playhead.svelte';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 
 	let thumbs = $state<Thumb[]>([]);
 	let loading = $state(false);
@@ -79,7 +79,7 @@
 	function reset() {
 		thumbAbort?.abort();
 		wfAbort?.abort();
-		releaseThumbs(thumbs);
+		releaseThumbs(untrack(() => thumbs));
 		thumbs = [];
 		peaks = null;
 		loading = false;
@@ -88,7 +88,7 @@
 
 	async function runThumbs(url: string) {
 		thumbAbort?.abort();
-		releaseThumbs(thumbs);
+		releaseThumbs(untrack(() => thumbs));
 		thumbs = [];
 		loading = true;
 		thumbAbort = new AbortController();
