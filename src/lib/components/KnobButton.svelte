@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import LED from './LED.svelte';
+	import { click as clickSfx } from '$lib/media/sfx';
 
 	type Accent = 'red' | 'amber' | 'green' | 'xenon' | 'none';
 
@@ -25,6 +26,11 @@
 		onclick,
 		icon
 	}: Props = $props();
+
+	function onClickInner(e: MouseEvent) {
+		clickSfx();
+		onclick?.(e);
+	}
 </script>
 
 <button
@@ -32,7 +38,7 @@
 	data-size={size}
 	data-active={active}
 	{disabled}
-	{onclick}
+	onclick={onClickInner}
 	type="button"
 >
 	<span class="cap">

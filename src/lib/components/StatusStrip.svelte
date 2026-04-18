@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { ui } from '$lib/state/ui.svelte';
+	import { click as clickSfx } from '$lib/media/sfx';
 	import { onMount } from 'svelte';
 	import LED from './LED.svelte';
 	import Timecode from './Timecode.svelte';
@@ -27,6 +29,12 @@
 
 	function toggleMute() {
 		player.muted = !player.muted;
+		clickSfx();
+	}
+
+	function toggleSfx() {
+		ui.toggleSound();
+		clickSfx();
 	}
 
 	const resolution = $derived(player.width > 0 ? `${player.width}×${player.height}` : '----');
@@ -54,6 +62,17 @@
 		>
 			<LED color="amber" on={player.muted} />
 			<span class="lbl" data-on={player.muted}>MUTE</span>
+		</button>
+
+		<button
+			type="button"
+			class="mute"
+			onclick={toggleSfx}
+			aria-pressed={ui.soundEnabled}
+			aria-label="Toggle interface sounds"
+		>
+			<LED color="green" on={ui.soundEnabled} />
+			<span class="lbl" data-on={ui.soundEnabled}>SFX</span>
 		</button>
 	</div>
 
