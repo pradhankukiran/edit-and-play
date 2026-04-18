@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const SRC = resolve(ROOT, 'node_modules/@ffmpeg/core/dist/umd');
+const SRC = resolve(ROOT, 'node_modules/@ffmpeg/core/dist/esm');
 const DEST = resolve(ROOT, 'static/ffmpeg');
 
 const files = ['ffmpeg-core.js', 'ffmpeg-core.wasm'];

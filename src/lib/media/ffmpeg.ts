@@ -11,14 +11,14 @@ export async function getFFmpeg(
 
 	loadPromise = (async () => {
 		const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-		const { toBlobURL } = await import('@ffmpeg/util');
 		const ffmpeg = new FFmpeg();
 		if (onLog) {
 			ffmpeg.on('log', ({ message }) => onLog(message));
 		}
+		const origin = typeof window !== 'undefined' ? window.location.origin : '';
 		await ffmpeg.load({
-			coreURL: await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-			wasmURL: await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm')
+			coreURL: `${origin}/ffmpeg/ffmpeg-core.js`,
+			wasmURL: `${origin}/ffmpeg/ffmpeg-core.wasm`
 		});
 		instance = ffmpeg;
 		return ffmpeg;
