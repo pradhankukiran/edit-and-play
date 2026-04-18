@@ -8,6 +8,7 @@
 	import Timeline from '$lib/components/Timeline.svelte';
 	import JogWheel from '$lib/components/JogWheel.svelte';
 	import Console from '$lib/components/Console.svelte';
+	import StatusStrip from '$lib/components/StatusStrip.svelte';
 
 	function markIn() {
 		trim.setIn(player.currentTime);
@@ -57,6 +58,7 @@
 		</div>
 	{:else}
 		<Console>
+			<StatusStrip />
 			<Viewport />
 			<Timeline />
 			<div class="controls">
