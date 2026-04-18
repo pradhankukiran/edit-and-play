@@ -2,6 +2,7 @@
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
 	import { ui } from '$lib/state/ui.svelte';
+	import { exporter } from '$lib/state/export.svelte';
 	import { click as clickSfx } from '$lib/media/sfx';
 	import { onMount } from 'svelte';
 	import LED from './LED.svelte';
@@ -39,6 +40,8 @@
 
 	function eject() {
 		clickSfx();
+		exporter.cancel();
+		exporter.close();
 		player.clear();
 	}
 
