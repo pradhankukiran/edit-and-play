@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { hotkey } from '$lib/actions/hotkey';
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
+	import JogWheel from '$lib/components/JogWheel.svelte';
 
 	function markIn() {
 		trim.setIn(player.currentTime);
@@ -17,13 +19,35 @@
 	function onExport() {
 		// wired in phase 8
 	}
+
+	function previewTrim() {
+		player.seek(trim.inPoint);
+		player.play();
+	}
+
+	const shortcuts = $derived({
+		space: () => player.ready && player.toggle(),
+		i: () => player.ready && markIn(),
+		o: () => player.ready && markOut(),
+		e: () => player.ready && onExport(),
+		enter: () => player.ready && previewTrim(),
+		arrowleft: () => player.ready && player.step(-1),
+		arrowright: () => player.ready && player.step(1),
+		'shift+arrowleft': () => player.ready && player.seek(player.currentTime - 1),
+		'shift+arrowright': () => player.ready && player.seek(player.currentTime + 1),
+		home: () => player.ready && player.seek(0),
+		end: () => player.ready && player.seek(player.duration),
+		j: () => player.ready && player.setRate(-2),
+		k: () => player.ready && (player.setRate(1), player.pause()),
+		l: () => player.ready && (player.setRate(2), player.play())
+	});
 </script>
 
 <svelte:head>
 	<title>edit-and-play · video trimmer</title>
 </svelte:head>
 
-<main>
+<main use:hotkey={shortcuts}>
 	{#if !player.url}
 		<div class="intro">
 			<h1>edit-and-play</h1>
@@ -34,7 +58,10 @@
 		<div class="stage">
 			<Viewport />
 			<Timeline />
-			<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
+			<div class="controls">
+				<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
+				<JogWheel />
+			</div>
 		</div>
 	{/if}
 </main>
@@ -78,5 +105,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+	}
+
+	.controls {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 16px;
+		align-items: center;
+	}
+
+	@media (max-width: 720px) {
+		.controls {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
