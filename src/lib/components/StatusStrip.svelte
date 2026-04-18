@@ -83,17 +83,35 @@
 
 <style>
 	.status {
+		position: relative;
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		gap: 18px;
 		align-items: stretch;
-		padding: 10px 14px;
-		background: linear-gradient(to bottom, var(--color-charcoal), var(--color-graphite));
+		padding: 14px 16px 10px;
+		background:
+			repeating-linear-gradient(
+				90deg,
+				rgba(255, 255, 255, 0.015) 0 1px,
+				transparent 1px 2px
+			),
+			linear-gradient(to bottom, var(--color-charcoal), var(--color-graphite));
 		border-radius: var(--radius-panel);
 		box-shadow:
 			inset 0 1px 0 var(--color-steel-hi),
 			inset 0 -1px 0 #000,
 			0 1px 0 rgba(0, 0, 0, 0.6);
+	}
+
+	.status::before {
+		content: 'STATUS';
+		position: absolute;
+		top: 3px;
+		left: 10px;
+		font-family: var(--font-data);
+		font-size: 8px;
+		letter-spacing: 0.38em;
+		color: #4a4f54;
 	}
 
 	.left {

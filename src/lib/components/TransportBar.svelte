@@ -71,17 +71,35 @@
 
 <style>
 	.bar {
+		position: relative;
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 24px;
-		padding: 16px 20px;
-		background: linear-gradient(to bottom, var(--color-charcoal), var(--color-graphite));
+		padding: 18px 22px 14px;
+		background:
+			repeating-linear-gradient(
+				90deg,
+				rgba(255, 255, 255, 0.015) 0 1px,
+				transparent 1px 2px
+			),
+			linear-gradient(to bottom, var(--color-charcoal), var(--color-graphite));
 		border-radius: var(--radius-panel);
 		box-shadow:
 			inset 0 1px 0 var(--color-steel-hi),
 			inset 0 -1px 0 #000,
 			0 2px 4px rgba(0, 0, 0, 0.6);
+	}
+
+	.bar::before {
+		content: 'TRANSPORT';
+		position: absolute;
+		top: 4px;
+		left: 10px;
+		font-family: var(--font-data);
+		font-size: 8px;
+		letter-spacing: 0.38em;
+		color: #4a4f54;
 	}
 
 	.group {

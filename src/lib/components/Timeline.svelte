@@ -232,6 +232,18 @@
 		overflow: hidden;
 	}
 
+	.timeline::before {
+		content: 'TIMELINE';
+		position: absolute;
+		top: -16px;
+		left: 2px;
+		font-family: var(--font-data);
+		font-size: 8px;
+		letter-spacing: 0.38em;
+		color: #4a4f54;
+		z-index: 5;
+	}
+
 	.track {
 		position: relative;
 		width: 100%;
