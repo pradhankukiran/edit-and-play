@@ -15,6 +15,8 @@
 	let wfCanvas: HTMLCanvasElement;
 	let wfAbort: AbortController | null = null;
 	let thumbAbort: AbortController | null = null;
+	let thumbToken = 0;
+	let wfToken = 0;
 	let trackEl = $state<HTMLElement | null>(null);
 
 	$effect(() => {
@@ -93,36 +95,46 @@
 		releaseThumbs(untrack(() => thumbs));
 		thumbs = [];
 		loading = true;
-		thumbAbort = new AbortController();
+		const myToken = ++thumbToken;
+		const ctrl = new AbortController();
+		thumbAbort = ctrl;
 		const next: Thumb[] = [];
 		try {
 			for await (const { thumb } of extractThumbnails(url, {
 				count: 60,
-				signal: thumbAbort.signal
+				signal: ctrl.signal
 			})) {
+				if (myToken !== thumbToken) {
+					URL.revokeObjectURL(thumb.url);
+					return;
+				}
 				next.push(thumb);
 				thumbs = [...next];
 			}
 		} catch (err) {
 			if ((err as Error).name !== 'AbortError') console.warn('thumbnails failed', err);
 		} finally {
-			loading = false;
+			if (myToken === thumbToken) loading = false;
 		}
 	}
 
 	async function runWaveform(file: File) {
 		wfAbort?.abort();
-		wfAbort = new AbortController();
+		const ctrl = new AbortController();
+		wfAbort = ctrl;
+		const myToken = ++wfToken;
 		wfStatus = 'loading';
 		try {
 			const result = await extractWaveform(file, {
 				peakCount: 2000,
-				signal: wfAbort.signal
+				signal: ctrl.signal
 			});
+			if (myToken !== wfToken) return;
 			peaks = result.peaks;
 			waveform.set(result.peaks, result.duration);
 			wfStatus = 'done';
 		} catch (err) {
+			if (myToken !== wfToken) return;
 			const name = (err as Error).name;
 			if (name === 'AbortError') return;
 			wfStatus = 'unavailable';
