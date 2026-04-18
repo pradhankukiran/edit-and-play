@@ -57,7 +57,11 @@
 </script>
 
 <svelte:head>
-	<title>edit-and-play · video trimmer</title>
+	<title>edit-and-play — tactile video trimmer</title>
+	<meta
+		name="description"
+		content="A tactile, broadcast-deck inspired video trimmer. 100% client-side, no upload. Built with Svelte."
+	/>
 </svelte:head>
 
 <main use:hotkey={shortcuts}>
