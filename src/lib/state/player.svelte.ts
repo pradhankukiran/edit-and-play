@@ -10,6 +10,7 @@ class PlayerState {
 	muted = $state(false);
 	ready = $state(false);
 	error = $state<string | null>(null);
+	rate = $state(1);
 
 	#videoEl: HTMLVideoElement | null = null;
 	#rafId: number | null = null;
@@ -84,6 +85,32 @@ class PlayerState {
 	setRate(rate: number) {
 		if (!this.#videoEl) return;
 		this.#videoEl.playbackRate = rate;
+		this.rate = rate;
+	}
+
+	bumpForward() {
+		if (!this.ready) return;
+		if (!this.playing || this.rate < 1) {
+			this.setRate(1);
+			this.play();
+			return;
+		}
+		this.setRate(Math.min(this.rate * 2, 8));
+		this.play();
+	}
+
+	stepBackward() {
+		if (!this.ready) return;
+		const jump = Math.max(1, Math.abs(this.rate));
+		this.pause();
+		this.setRate(1);
+		this.seek(this.currentTime - jump);
+	}
+
+	pauseAtOne() {
+		if (!this.ready) return;
+		this.setRate(1);
+		this.pause();
 	}
 
 	clear() {
@@ -96,6 +123,8 @@ class PlayerState {
 		this.ready = false;
 		this.width = 0;
 		this.height = 0;
+		this.fps = 30;
+		this.rate = 1;
 		this.error = null;
 	}
 

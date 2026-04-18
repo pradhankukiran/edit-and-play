@@ -49,15 +49,9 @@
 					'shift+arrowright': () => player.seek(player.currentTime + 1),
 					home: () => player.seek(0),
 					end: () => player.seek(player.duration),
-					j: () => player.setRate(-2),
-					k: () => {
-						player.setRate(1);
-						player.pause();
-					},
-					l: () => {
-						player.setRate(2);
-						player.play();
-					}
+					j: () => player.stepBackward(),
+					k: () => player.pauseAtOne(),
+					l: () => player.bumpForward()
 				}
 			: ({} as HotkeyMap)
 	);
