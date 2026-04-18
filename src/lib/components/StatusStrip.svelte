@@ -38,8 +38,23 @@
 		clickSfx();
 	}
 
+	let ejectArmed = $state(false);
+	let ejectArmTimer: ReturnType<typeof setTimeout> | null = null;
+
 	function eject() {
 		clickSfx();
+		if (!ejectArmed) {
+			ejectArmed = true;
+			if (ejectArmTimer) clearTimeout(ejectArmTimer);
+			ejectArmTimer = setTimeout(() => {
+				ejectArmed = false;
+				ejectArmTimer = null;
+			}, 2000);
+			return;
+		}
+		if (ejectArmTimer) clearTimeout(ejectArmTimer);
+		ejectArmTimer = null;
+		ejectArmed = false;
 		exporter.cancel();
 		exporter.close();
 		player.clear();
@@ -91,11 +106,12 @@
 		<button
 			type="button"
 			class="toggle eject"
+			data-armed={ejectArmed}
 			onclick={eject}
-			aria-label="Eject and load a different video"
+			aria-label={ejectArmed ? 'Click again to confirm eject' : 'Eject and load a different video'}
 		>
 			<span class="eject-icon">⏏</span>
-			<span class="lbl">EJECT</span>
+			<span class="lbl">{ejectArmed ? 'CONFIRM?' : 'EJECT'}</span>
 		</button>
 	</div>
 
@@ -221,6 +237,26 @@
 	.eject:hover .eject-icon,
 	.eject:hover .lbl {
 		color: var(--color-led-xenon);
+	}
+
+	.eject[data-armed='true'] .eject-icon,
+	.eject[data-armed='true'] .lbl {
+		color: var(--color-led-red);
+		text-shadow: 0 0 6px rgba(255, 43, 28, 0.6);
+		animation: armed-pulse 0.5s steps(2, end) infinite;
+	}
+
+	@keyframes armed-pulse {
+		50% {
+			opacity: 0.4;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.eject[data-armed='true'] .eject-icon,
+		.eject[data-armed='true'] .lbl {
+			animation: none;
+		}
 	}
 
 	.data {
