@@ -60,7 +60,8 @@
 
 	.ring {
 		position: absolute;
-		top: 0;
+		top: -5px;
+		left: -5px;
 		width: calc(var(--size) + 10px);
 		height: calc(var(--size) + 10px);
 		border-radius: 50%;
