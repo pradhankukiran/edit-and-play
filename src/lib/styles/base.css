@@ -1,0 +1,45 @@
+html,
+body {
+	height: 100%;
+	background: var(--color-graphite);
+	color: var(--color-led-xenon);
+	font-family: var(--font-ui);
+	font-feature-settings: 'ss01', 'cv11';
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	overscroll-behavior: none;
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	background:
+		radial-gradient(ellipse at top, rgba(90, 96, 102, 0.08) 0%, transparent 60%),
+		var(--color-graphite);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+::selection {
+	background: var(--color-led-amber);
+	color: #000;
+}
+
+button {
+	font-family: inherit;
+	color: inherit;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible {
+	outline: 2px solid var(--color-led-amber);
+	outline-offset: 2px;
+}
+
+input,
+textarea {
+	font-family: inherit;
+}

@@ -1,0 +1,90 @@
+@theme {
+	/* Surface palette — dark graphite body, inset wells */
+	--color-graphite: #1a1c1e;
+	--color-charcoal: #242729;
+	--color-well: #0e0f10;
+	--color-steel: #3a3f44;
+	--color-steel-hi: #5a6066;
+	--color-steel-lo: #0a0b0c;
+
+	/* LED palette */
+	--color-led-red: #ff2b1c;
+	--color-led-red-dim: #3a0a06;
+	--color-led-amber: #ffb400;
+	--color-led-amber-dim: #3a2900;
+	--color-led-green: #3bff7c;
+	--color-led-green-dim: #0a3316;
+	--color-led-xenon: #f4f8ff;
+
+	/* Phosphor (7-seg) */
+	--color-phosphor: #7dff8f;
+	--color-phosphor-dim: #1c2a1e;
+	--color-phosphor-glow: rgba(125, 255, 143, 0.45);
+
+	/* Type scale */
+	--font-display: 'Oswald', 'Impact', sans-serif;
+	--font-ui: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+	--font-data: 'JetBrains Mono', 'Menlo', monospace;
+	--font-seg: 'DSEG7 Classic', 'JetBrains Mono', monospace;
+
+	/* Bevels & shadows — machined-panel language */
+	--shadow-raised:
+		inset 0 1px 0 var(--color-steel-hi),
+		inset 0 -1px 0 var(--color-steel-lo),
+		0 2px 4px rgba(0, 0, 0, 0.6),
+		0 1px 0 rgba(0, 0, 0, 0.9);
+	--shadow-inset:
+		inset 0 2px 3px rgba(0, 0, 0, 0.85),
+		inset 0 -1px 0 var(--color-steel-hi);
+	--shadow-pressed:
+		inset 0 2px 3px rgba(0, 0, 0, 0.7),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+
+	/* LED glow utilities */
+	--glow-red: 0 0 4px var(--color-led-red), 0 0 10px rgba(255, 43, 28, 0.55);
+	--glow-amber: 0 0 4px var(--color-led-amber), 0 0 10px rgba(255, 180, 0, 0.55);
+	--glow-green: 0 0 4px var(--color-led-green), 0 0 10px rgba(59, 255, 124, 0.55);
+	--glow-phosphor: 0 0 6px var(--color-phosphor-glow);
+
+	/* Motion */
+	--ease-mechanical: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--ease-snap: cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-inertia: cubic-bezier(0.1, 0.9, 0.2, 1);
+
+	/* Layout rhythm */
+	--radius-panel: 4px;
+	--radius-button: 3px;
+	--radius-led: 999px;
+	--border-panel: 1px solid #000;
+}
+
+/* Hairline utility for machined edges */
+@utility hairline-top {
+	box-shadow: inset 0 1px 0 var(--color-steel-hi);
+}
+@utility hairline-bottom {
+	box-shadow: inset 0 -1px 0 var(--color-steel-lo);
+}
+
+/* Raised panel surface (machined) */
+@utility surface-raised {
+	background: linear-gradient(to bottom, var(--color-charcoal), var(--color-graphite));
+	box-shadow: var(--shadow-raised);
+	border-radius: var(--radius-panel);
+}
+
+/* Inset well (screens, timeline background) */
+@utility surface-well {
+	background: var(--color-well);
+	box-shadow: var(--shadow-inset);
+	border-radius: var(--radius-panel);
+}
+
+/* Brushed-aluminum texture overlay */
+@utility brushed {
+	background-image: repeating-linear-gradient(
+		90deg,
+		rgba(255, 255, 255, 0.015) 0 1px,
+		transparent 1px 2px
+	);
+}
