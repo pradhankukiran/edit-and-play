@@ -89,7 +89,7 @@
 		min-height: 100dvh;
 		display: grid;
 		place-items: center;
-		padding: 24px;
+		padding: 12px;
 	}
 
 	.intro {
@@ -120,7 +120,7 @@
 
 	.workbench {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 320px;
+		grid-template-columns: minmax(0, 1fr) 360px;
 		gap: 16px;
 		align-items: start;
 	}

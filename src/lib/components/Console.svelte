@@ -36,7 +36,7 @@
 
 <style>
 	.console {
-		width: min(1080px, 96vw);
+		width: min(1920px, 98vw);
 		display: flex;
 		flex-direction: column;
 		gap: 0;
@@ -137,13 +137,13 @@
 			inset 0 1px 0 var(--color-steel-hi),
 			inset 0 -1px 0 #000,
 			0 1px 0 rgba(0, 0, 0, 0.8);
-		padding: 24px 22px;
+		padding: 16px 20px;
 	}
 
 	.inner {
 		display: flex;
 		flex-direction: column;
-		gap: 16px;
+		gap: 12px;
 	}
 
 	.screw {
