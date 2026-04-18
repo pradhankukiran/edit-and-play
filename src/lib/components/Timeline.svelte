@@ -1,56 +1,114 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { extractThumbnails, releaseThumbs, type Thumb } from '$lib/media/thumbnails';
+	import { extractWaveform } from '$lib/media/waveform';
 	import { onDestroy } from 'svelte';
 
 	let thumbs = $state<Thumb[]>([]);
 	let loading = $state(false);
-	let abortCtrl: AbortController | null = null;
+	let peaks = $state<Float32Array | null>(null);
+	let wfCanvas: HTMLCanvasElement;
+	let wfAbort: AbortController | null = null;
+	let thumbAbort: AbortController | null = null;
 
 	$effect(() => {
 		const url = player.url;
+		const file = player.file;
 		if (!url || !player.ready) {
 			reset();
 			return;
 		}
-		run(url);
-		return () => abortCtrl?.abort();
+		runThumbs(url);
+		if (file) runWaveform(file);
+		return () => {
+			thumbAbort?.abort();
+			wfAbort?.abort();
+		};
+	});
+
+	$effect(() => {
+		if (peaks && wfCanvas) drawWaveform();
 	});
 
 	onDestroy(() => {
-		abortCtrl?.abort();
+		thumbAbort?.abort();
+		wfAbort?.abort();
 		releaseThumbs(thumbs);
 	});
 
 	function reset() {
-		abortCtrl?.abort();
+		thumbAbort?.abort();
+		wfAbort?.abort();
 		releaseThumbs(thumbs);
 		thumbs = [];
+		peaks = null;
 		loading = false;
 	}
 
-	async function run(url: string) {
-		reset();
+	async function runThumbs(url: string) {
+		thumbAbort?.abort();
+		releaseThumbs(thumbs);
+		thumbs = [];
 		loading = true;
-		abortCtrl = new AbortController();
+		thumbAbort = new AbortController();
 		const next: Thumb[] = [];
 		try {
 			for await (const { thumb } of extractThumbnails(url, {
 				count: 60,
-				signal: abortCtrl.signal
+				signal: thumbAbort.signal
 			})) {
 				next.push(thumb);
 				thumbs = [...next];
 			}
 		} catch (err) {
-			if ((err as Error).name !== 'AbortError') {
-				console.warn('thumbnail extraction failed', err);
-			}
+			if ((err as Error).name !== 'AbortError') console.warn('thumbnails failed', err);
 		} finally {
 			loading = false;
 		}
 	}
+
+	async function runWaveform(file: File) {
+		wfAbort?.abort();
+		wfAbort = new AbortController();
+		try {
+			const result = await extractWaveform(file, {
+				peakCount: 2000,
+				signal: wfAbort.signal
+			});
+			peaks = result.peaks;
+		} catch (err) {
+			if ((err as Error).name !== 'AbortError') console.warn('waveform failed', err);
+		}
+	}
+
+	function drawWaveform() {
+		if (!wfCanvas || !peaks) return;
+		const dpr = window.devicePixelRatio || 1;
+		const w = wfCanvas.clientWidth;
+		const h = wfCanvas.clientHeight;
+		wfCanvas.width = w * dpr;
+		wfCanvas.height = h * dpr;
+		const ctx = wfCanvas.getContext('2d');
+		if (!ctx) return;
+		ctx.scale(dpr, dpr);
+		ctx.clearRect(0, 0, w, h);
+
+		const n = peaks.length;
+		const mid = h / 2;
+		const barWidth = Math.max(1, w / n);
+		ctx.fillStyle = 'rgba(59, 255, 124, 0.82)';
+		ctx.shadowColor = 'rgba(59, 255, 124, 0.5)';
+		ctx.shadowBlur = 2;
+
+		for (let i = 0; i < n; i++) {
+			const x = (i / n) * w;
+			const amp = peaks[i] * (mid - 1);
+			ctx.fillRect(x, mid - amp, barWidth * 0.78, amp * 2);
+		}
+	}
 </script>
+
+<svelte:window onresize={drawWaveform} />
 
 <div class="timeline">
 	<div class="perf top" aria-hidden="true"></div>
@@ -66,6 +124,13 @@
 					<img src={t.url} alt="" />
 				</div>
 			{/each}
+		{/if}
+	</div>
+
+	<div class="waveform">
+		<canvas bind:this={wfCanvas}></canvas>
+		{#if !peaks && player.ready}
+			<div class="wf-status">analyzing audio…</div>
 		{/if}
 	</div>
 
@@ -129,6 +194,32 @@
 		50% {
 			background-position: 100% 0;
 		}
+	}
+
+	.waveform {
+		position: relative;
+		height: 44px;
+		background: #040504;
+		border-top: 1px solid #000;
+		border-bottom: 1px solid #000;
+	}
+
+	.waveform canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.wf-status {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		font-family: var(--font-data);
+		font-size: 10px;
+		letter-spacing: 0.22em;
+		color: var(--color-led-green-dim);
+		text-transform: uppercase;
 	}
 
 	.perf {
