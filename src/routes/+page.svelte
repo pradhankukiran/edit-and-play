@@ -7,6 +7,7 @@
 	import TransportBar from '$lib/components/TransportBar.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import JogWheel from '$lib/components/JogWheel.svelte';
+	import Console from '$lib/components/Console.svelte';
 
 	function markIn() {
 		trim.setIn(player.currentTime);
@@ -55,14 +56,14 @@
 			<DropZone />
 		</div>
 	{:else}
-		<div class="stage">
+		<Console>
 			<Viewport />
 			<Timeline />
 			<div class="controls">
 				<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
 				<JogWheel />
 			</div>
-		</div>
+		</Console>
 	{/if}
 </main>
 
@@ -98,13 +99,6 @@
 		letter-spacing: 0.4em;
 		color: #5a6066;
 		text-transform: uppercase;
-	}
-
-	.stage {
-		width: min(960px, 95vw);
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
 	}
 
 	.controls {
