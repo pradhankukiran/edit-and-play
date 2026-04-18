@@ -71,19 +71,3 @@ Every gradient, shadow, and LED glow is hand-built against `src/lib/styles/token
 
 Scrub by: dragging the playhead, clicking the timeline, or grabbing the jog wheel.
 Arrow keys nudge a focused slider (trim handle or playhead) by one frame.
-
----
-
-<div align="center">
-
-```text
-╔════════════════════════════════════════════════════════════╗
-║   EDIT·AND·PLAY · MODEL 016 · POST SUITE                   ║
-║   serial 00-016-0000-A                        ffmpeg.wasm  ║
-╚════════════════════════════════════════════════════════════╝
-```
-
-**Built as a portfolio piece for a Svelte + video-editor role.**
-Source is MIT-licensable by the author on request.
-
-</div>
