@@ -44,11 +44,22 @@
 		if (player.ready) trim.reset(player.duration);
 	});
 
-	const inPct = $derived(player.duration > 0 ? trim.inPoint / player.duration : 0);
-	const outPct = $derived(player.duration > 0 ? trim.outPoint / player.duration : 1);
 	const playheadPct = $derived(
 		player.duration > 0 ? player.currentTime / player.duration : 0
 	);
+
+	const gaps = $derived.by(() => {
+		if (player.duration <= 0) return [] as Array<{ start: number; end: number }>;
+		const sorted = [...trim.segments].sort((a, b) => a.inPoint - b.inPoint);
+		const out: Array<{ start: number; end: number }> = [];
+		let cursor = 0;
+		for (const s of sorted) {
+			if (s.inPoint > cursor) out.push({ start: cursor, end: s.inPoint });
+			cursor = Math.max(cursor, s.outPoint);
+		}
+		if (cursor < player.duration) out.push({ start: cursor, end: player.duration });
+		return out;
+	});
 
 	let wasPlaying = false;
 
@@ -271,39 +282,70 @@
 			{/if}
 		</div>
 
-		{#if player.ready}
-			<div class="selection" style="--in: {inPct * 100}%; --out: {outPct * 100}%"></div>
-			<div class="mask left" style="--w: {inPct * 100}%"></div>
-			<div class="mask right" style="--w: {(1 - outPct) * 100}%"></div>
+		{#if player.ready && player.duration > 0}
+			{#each gaps as g (g.start)}
+				<div
+					class="gap-mask"
+					style="--left: {(g.start / player.duration) * 100}%; --width: {((g.end - g.start) / player.duration) * 100}%"
+					aria-hidden="true"
+				></div>
+			{/each}
 
-			<TrimHandle
-				variant="in"
-				percent={inPct}
-				time={trim.inPoint}
-				fps={player.fps}
-				duration={player.duration}
-				{trackEl}
-				onstart={onScrubStart}
-				onmove={(pct) => {
-					trim.setIn(pct * player.duration);
-					queueSeek(trim.inPoint);
-				}}
-				onend={onScrubEnd}
-			/>
-			<TrimHandle
-				variant="out"
-				percent={outPct}
-				time={trim.outPoint}
-				fps={player.fps}
-				duration={player.duration}
-				{trackEl}
-				onstart={onScrubStart}
-				onmove={(pct) => {
-					trim.setOut(pct * player.duration);
-					queueSeek(trim.outPoint);
-				}}
-				onend={onScrubEnd}
-			/>
+			{#each trim.segments as seg (seg.id)}
+				{@const inPctSeg = seg.inPoint / player.duration}
+				{@const outPctSeg = seg.outPoint / player.duration}
+				{@const selected = trim.selectedId === seg.id}
+				<button
+					type="button"
+					class="segment"
+					data-selected={selected}
+					style="--in: {inPctSeg * 100}%; --out: {outPctSeg * 100}%"
+					onclick={(e) => {
+						e.stopPropagation();
+						trim.selectSegment(seg.id);
+					}}
+					aria-label="Segment from {seg.inPoint.toFixed(2)}s to {seg.outPoint.toFixed(2)}s"
+				></button>
+			{/each}
+
+			{#each trim.segments as seg (seg.id)}
+				{@const inPctSeg = seg.inPoint / player.duration}
+				{@const outPctSeg = seg.outPoint / player.duration}
+				<TrimHandle
+					variant="in"
+					percent={inPctSeg}
+					time={seg.inPoint}
+					fps={player.fps}
+					duration={player.duration}
+					{trackEl}
+					onstart={() => {
+						trim.selectSegment(seg.id);
+						onScrubStart();
+					}}
+					onmove={(pct) => {
+						trim.updateSegment(seg.id, { inPoint: pct * player.duration });
+						queueSeek(seg.inPoint);
+					}}
+					onend={onScrubEnd}
+				/>
+				<TrimHandle
+					variant="out"
+					percent={outPctSeg}
+					time={seg.outPoint}
+					fps={player.fps}
+					duration={player.duration}
+					{trackEl}
+					onstart={() => {
+						trim.selectSegment(seg.id);
+						onScrubStart();
+					}}
+					onmove={(pct) => {
+						trim.updateSegment(seg.id, { outPoint: pct * player.duration });
+						queueSeek(seg.outPoint);
+					}}
+					onend={onScrubEnd}
+				/>
+			{/each}
 
 			<Playhead
 				percent={playheadPct}
@@ -377,43 +419,61 @@
 		);
 	}
 
-	.selection {
+	.gap-mask {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: var(--left);
+		width: var(--width);
+		background: rgba(0, 0, 0, 0.55);
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.segment {
 		position: absolute;
 		top: 0;
 		bottom: 0;
 		left: var(--in);
 		right: calc(100% - var(--out));
-		pointer-events: none;
+		padding: 0;
+		margin: 0;
+		border: 0;
 		background: linear-gradient(
 			to bottom,
 			rgba(255, 180, 0, 0.14) 0%,
 			rgba(255, 180, 0, 0.08) 100%
 		);
 		box-shadow:
-			inset 1px 0 0 rgba(255, 180, 0, 0.85),
-			inset -1px 0 0 rgba(255, 180, 0, 0.85),
-			inset 0 2px 0 rgba(255, 180, 0, 0.5),
-			inset 0 -2px 0 rgba(255, 180, 0, 0.5);
+			inset 1px 0 0 rgba(255, 180, 0, 0.7),
+			inset -1px 0 0 rgba(255, 180, 0, 0.7),
+			inset 0 2px 0 rgba(255, 180, 0, 0.35),
+			inset 0 -2px 0 rgba(255, 180, 0, 0.35);
+		cursor: pointer;
 		z-index: 1;
+		transition: box-shadow 140ms var(--ease-mechanical);
 	}
 
-	.mask {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.55);
-		pointer-events: none;
-		z-index: 2;
+	.segment:hover {
+		background: linear-gradient(
+			to bottom,
+			rgba(255, 180, 0, 0.18) 0%,
+			rgba(255, 180, 0, 0.1) 100%
+		);
 	}
 
-	.mask.left {
-		left: 0;
-		width: var(--w);
+	.segment[data-selected='true'] {
+		box-shadow:
+			inset 2px 0 0 var(--color-led-amber),
+			inset -2px 0 0 var(--color-led-amber),
+			inset 0 3px 0 rgba(255, 180, 0, 0.7),
+			inset 0 -3px 0 rgba(255, 180, 0, 0.7),
+			0 0 18px rgba(255, 180, 0, 0.28);
 	}
 
-	.mask.right {
-		right: 0;
-		width: var(--w);
+	.segment:focus-visible {
+		outline: 2px solid var(--color-led-amber);
+		outline-offset: 2px;
 	}
 
 	.thumb {
