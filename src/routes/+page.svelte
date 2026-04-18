@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { exporter } from '$lib/state/export.svelte';
 	import { hotkey } from '$lib/actions/hotkey';
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
@@ -9,6 +10,7 @@
 	import JogWheel from '$lib/components/JogWheel.svelte';
 	import Console from '$lib/components/Console.svelte';
 	import StatusStrip from '$lib/components/StatusStrip.svelte';
+	import ExportModal from '$lib/components/ExportModal.svelte';
 
 	function markIn() {
 		trim.setIn(player.currentTime);
@@ -19,7 +21,10 @@
 	}
 
 	function onExport() {
-		// wired in phase 8
+		if (!player.file || !player.ready) return;
+		if (trim.selected <= 0.05) return;
+		player.pause();
+		void exporter.start(player.file, trim.inPoint, trim.outPoint);
 	}
 
 	function previewTrim() {
@@ -67,6 +72,8 @@
 			</div>
 		</Console>
 	{/if}
+
+	<ExportModal />
 </main>
 
 <style>
