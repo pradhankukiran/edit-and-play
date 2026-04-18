@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { exporter } from '$lib/state/export.svelte';
+	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
 	import { chirp } from '$lib/media/sfx';
 	import { fade, scale } from 'svelte/transition';
@@ -29,6 +30,11 @@
 		} else {
 			exporter.close();
 		}
+	}
+
+	function retry() {
+		if (!player.file || trim.selected <= 0.05) return;
+		void exporter.start(player.file, trim.inPoint, trim.outPoint);
 	}
 
 	function fmtBytes(n: number): string {
@@ -120,8 +126,9 @@
 						sublabel="[E]"
 						accent="amber"
 						size="lg"
-						onclick={dismiss}
+						onclick={retry}
 					/>
+					<KnobButton label="CLOSE" sublabel="[ESC]" onclick={() => exporter.close()} />
 				{:else}
 					<KnobButton label="CANCEL" sublabel="[ESC]" accent="red" onclick={dismiss} />
 				{/if}
