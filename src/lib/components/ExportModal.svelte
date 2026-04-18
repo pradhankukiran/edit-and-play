@@ -47,6 +47,10 @@
 		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
 		return `${(n / 1024 / 1024).toFixed(2)} MB`;
 	}
+
+	const downloadLabel = $derived(
+		exporter.result ? `TRIM.${(exporter.result.filename.split('.').pop() ?? 'mp4').toUpperCase()}` : 'TRIM'
+	);
 </script>
 
 {#if open}
@@ -118,7 +122,7 @@
 				{#if exporter.status === 'done'}
 					<KnobButton
 						label="DOWNLOAD"
-						sublabel="TRIM.MP4"
+						sublabel={downloadLabel}
 						accent="green"
 						size="lg"
 						active
