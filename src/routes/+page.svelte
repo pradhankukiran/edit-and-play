@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { markers } from '$lib/state/markers.svelte';
 	import { exporter } from '$lib/state/export.svelte';
 	import { hotkey, type HotkeyMap } from '$lib/actions/hotkey';
+	import { chirp as chirpSfx } from '$lib/media/sfx';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
@@ -13,11 +15,62 @@
 	import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
 	function markIn() {
-		trim.setIn(player.currentTime);
+		trim.markIn(player.currentTime);
 	}
 
 	function markOut() {
-		trim.setOut(player.currentTime);
+		trim.markOut(player.currentTime);
+	}
+
+	function splitAtPlayhead() {
+		trim.splitAt(player.currentTime);
+	}
+
+	function deleteSelected() {
+		if (trim.selectedId) trim.removeSegment(trim.selectedId);
+	}
+
+	function formatSMPTE(t: number, fps: number): string {
+		const v = Math.max(0, t);
+		const hh = Math.floor(v / 3600);
+		const mm = Math.floor((v % 3600) / 60);
+		const ss = Math.floor(v % 60);
+		const ff = Math.floor((v % 1) * fps);
+		return `${String(hh).padStart(2, '0')}_${String(mm).padStart(2, '0')}_${String(ss).padStart(2, '0')}_${String(ff).padStart(2, '0')}`;
+	}
+
+	async function onGrab() {
+		if (!player.file || !player.ready) return;
+		const blob = await player.captureFrame();
+		if (!blob) return;
+		const base = player.file.name.replace(/\.[^.]+$/, '');
+		const tc = formatSMPTE(player.currentTime, player.fps);
+		const filename = `${base}_frame_${tc}.png`;
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = filename;
+		a.click();
+		setTimeout(() => URL.revokeObjectURL(url), 10_000);
+		chirpSfx(true);
+	}
+
+	function addMarker() {
+		markers.add(player.currentTime);
+	}
+
+	function gotoPrevMarker() {
+		const prev = markers.prevBefore(player.currentTime);
+		if (prev) player.seek(prev.time);
+	}
+
+	function gotoNextMarker() {
+		const next = markers.nextAfter(player.currentTime);
+		if (next) player.seek(next.time);
+	}
+
+	function clearMarkers() {
+		markers.clear();
 	}
 
 	function onExport() {
@@ -44,6 +97,14 @@
 					space: () => player.toggle(),
 					i: markIn,
 					o: markOut,
+					s: splitAtPlayhead,
+					backspace: deleteSelected,
+					delete: deleteSelected,
+					g: onGrab,
+					m: addMarker,
+					'shift+m': clearMarkers,
+					'[': gotoPrevMarker,
+					']': gotoNextMarker,
 					e: onExport,
 					enter: previewTrim,
 					arrowleft: () => player.step(-1),
@@ -78,7 +139,14 @@
 			</section>
 			<aside class="rail">
 				<StatusStrip />
-				<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
+				<TransportBar
+					onmarkIn={markIn}
+					onmarkOut={markOut}
+					onsplit={splitAtPlayhead}
+					ondelete={deleteSelected}
+					ongrab={onGrab}
+					onexport={onExport}
+				/>
 				<div class="jog-mount">
 					<JogWheel />
 				</div>

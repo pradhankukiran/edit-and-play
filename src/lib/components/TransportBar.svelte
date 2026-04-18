@@ -5,11 +5,13 @@
 	interface Props {
 		onmarkIn?: () => void;
 		onmarkOut?: () => void;
+		onsplit?: () => void;
+		ondelete?: () => void;
 		ongrab?: () => void;
 		onexport?: () => void;
 	}
 
-	let { onmarkIn, onmarkOut, ongrab, onexport }: Props = $props();
+	let { onmarkIn, onmarkOut, onsplit, ondelete, ongrab, onexport }: Props = $props();
 </script>
 
 <div class="bar">
@@ -48,10 +50,28 @@
 			disabled={!player.ready}
 		/>
 		<KnobButton
+			label="✂"
+			sublabel="SPLIT [S]"
+			accent="xenon"
+			size="sm"
+			onclick={() => onsplit?.()}
+			disabled={!player.ready}
+		/>
+		<KnobButton
 			label="OUT"
 			sublabel="[O]"
 			accent="amber"
 			onclick={() => onmarkOut?.()}
+			disabled={!player.ready}
+		/>
+	</div>
+
+	<div class="row segment-ops">
+		<KnobButton
+			label="DEL"
+			sublabel="BACKSPC"
+			size="sm"
+			onclick={() => ondelete?.()}
 			disabled={!player.ready}
 		/>
 	</div>
@@ -127,6 +147,11 @@
 
 	.row.grab {
 		justify-content: space-between;
+		padding: 0 4px;
+	}
+
+	.row.segment-ops {
+		justify-content: center;
 		padding: 0 4px;
 	}
 
