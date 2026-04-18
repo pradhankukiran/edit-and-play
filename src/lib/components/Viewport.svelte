@@ -23,6 +23,13 @@
 </script>
 
 <div class="viewport">
+	<div class="corners" aria-hidden="true">
+		<span class="corner tl"></span>
+		<span class="corner tr"></span>
+		<span class="corner bl"></span>
+		<span class="corner br"></span>
+	</div>
+
 	<video
 		bind:this={videoEl}
 		src={player.url ?? ''}
@@ -32,6 +39,14 @@
 		playsinline
 		muted={player.muted}
 	></video>
+
+	<div class="scanlines" aria-hidden="true"></div>
+	<div class="vignette" aria-hidden="true"></div>
+
+	<div class="safe-area" aria-hidden="true">
+		<span class="tick top-center"></span>
+		<span class="tick bottom-center"></span>
+	</div>
 
 	{#if !player.ready}
 		<div class="placeholder" aria-hidden="true">
@@ -80,5 +95,91 @@
 		background:
 			linear-gradient(var(--color-phosphor-dim) 0 0) center/100% 1px no-repeat,
 			linear-gradient(var(--color-phosphor-dim) 0 0) center/1px 100% no-repeat;
+	}
+
+	.scanlines {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: repeating-linear-gradient(
+			0deg,
+			rgba(0, 0, 0, 0.12) 0 1px,
+			transparent 1px 3px
+		);
+		mix-blend-mode: multiply;
+		opacity: 0.5;
+	}
+
+	.vignette {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse at center,
+			transparent 45%,
+			rgba(0, 0, 0, 0.35) 100%
+		);
+	}
+
+	.corners {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.corner {
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border: 1px solid rgba(244, 248, 255, 0.35);
+		border-width: 0;
+	}
+	.corner.tl {
+		top: 6px;
+		left: 6px;
+		border-top-width: 1px;
+		border-left-width: 1px;
+	}
+	.corner.tr {
+		top: 6px;
+		right: 6px;
+		border-top-width: 1px;
+		border-right-width: 1px;
+	}
+	.corner.bl {
+		bottom: 6px;
+		left: 6px;
+		border-bottom-width: 1px;
+		border-left-width: 1px;
+	}
+	.corner.br {
+		bottom: 6px;
+		right: 6px;
+		border-bottom-width: 1px;
+		border-right-width: 1px;
+	}
+
+	.safe-area {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.tick {
+		position: absolute;
+		width: 1px;
+		height: 6px;
+		background: rgba(244, 248, 255, 0.25);
+	}
+
+	.tick.top-center {
+		top: 0;
+		left: 50%;
+	}
+
+	.tick.bottom-center {
+		bottom: 0;
+		left: 50%;
 	}
 </style>
