@@ -2,6 +2,7 @@
 	import { player } from '$lib/state/player.svelte';
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
+	import TransportBar from '$lib/components/TransportBar.svelte';
 </script>
 
 <svelte:head>
@@ -18,6 +19,7 @@
 	{:else}
 		<div class="stage">
 			<Viewport />
+			<TransportBar />
 		</div>
 	{/if}
 </main>
