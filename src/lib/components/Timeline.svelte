@@ -3,6 +3,7 @@
 	import { trim } from '$lib/state/trim.svelte';
 	import { extractThumbnails, releaseThumbs, type Thumb } from '$lib/media/thumbnails';
 	import { extractWaveform } from '$lib/media/waveform';
+	import { waveform } from '$lib/state/waveform.svelte';
 	import TrimHandle from './TrimHandle.svelte';
 	import Playhead from './Playhead.svelte';
 	import { onDestroy } from 'svelte';
@@ -82,6 +83,7 @@
 		thumbs = [];
 		peaks = null;
 		loading = false;
+		waveform.clear();
 	}
 
 	async function runThumbs(url: string) {
@@ -115,6 +117,7 @@
 				signal: wfAbort.signal
 			});
 			peaks = result.peaks;
+			waveform.set(result.peaks, result.duration);
 		} catch (err) {
 			if ((err as Error).name !== 'AbortError') console.warn('waveform failed', err);
 		}
