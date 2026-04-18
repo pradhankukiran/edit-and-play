@@ -1,4 +1,4 @@
-import { trimVideo } from '$lib/media/ffmpeg';
+import { trimVideo, type Segment, type ExportOptions } from '$lib/media/ffmpeg';
 
 export type ExportStatus = 'idle' | 'loading' | 'encoding' | 'done' | 'error';
 
@@ -7,6 +7,11 @@ interface ExportResult {
 	url: string;
 	filename: string;
 	size: number;
+}
+
+interface ExportMeta {
+	sourceWidth?: number;
+	sourceHeight?: number;
 }
 
 class ExportState {
@@ -18,7 +23,12 @@ class ExportState {
 	abortCtrl: AbortController | null = null;
 	#inFlight: Promise<void> | null = null;
 
-	async start(file: File, inTime: number, outTime: number) {
+	async start(
+		file: File,
+		segments: Segment[],
+		options?: Partial<ExportOptions>,
+		meta?: ExportMeta
+	) {
 		if (this.#inFlight) {
 			this.abortCtrl?.abort();
 			await this.#inFlight.catch(() => {});
@@ -28,7 +38,7 @@ class ExportState {
 		this.abortCtrl = new AbortController();
 		const signal = this.abortCtrl.signal;
 
-		const run = this.#runExport(file, inTime, outTime, signal);
+		const run = this.#runExport(file, segments, options, meta, signal);
 		this.#inFlight = run;
 		try {
 			await run;
@@ -37,11 +47,19 @@ class ExportState {
 		}
 	}
 
-	async #runExport(file: File, inTime: number, outTime: number, signal: AbortSignal) {
+	async #runExport(
+		file: File,
+		segments: Segment[],
+		options: Partial<ExportOptions> | undefined,
+		meta: ExportMeta | undefined,
+		signal: AbortSignal
+	) {
 		try {
 			const result = await trimVideo(file, {
-				inTime,
-				outTime,
+				segments,
+				options,
+				sourceWidth: meta?.sourceWidth,
+				sourceHeight: meta?.sourceHeight,
 				onProgress: (p) => {
 					this.status = 'encoding';
 					this.progress = p;
@@ -54,7 +72,11 @@ class ExportState {
 			});
 
 			const base = file.name.replace(/\.[^.]+$/, '');
-			const filename = `${base}_trim_${inTime.toFixed(2)}-${outTime.toFixed(2)}.${result.extension}`;
+			const totalSeconds = segments.reduce(
+				(sum, s) => sum + Math.max(0, s.outPoint - s.inPoint),
+				0
+			);
+			const filename = `${base}_trim_${totalSeconds.toFixed(2)}s.${result.extension}`;
 			const url = URL.createObjectURL(result.blob);
 			this.result = { blob: result.blob, url, filename, size: result.blob.size };
 			this.progress = 1;

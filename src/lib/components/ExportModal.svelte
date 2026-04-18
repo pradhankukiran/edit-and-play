@@ -53,8 +53,11 @@
 	}
 
 	function retry() {
-		if (!player.file || trim.totalDuration <= 0.05) return;
-		void exporter.start(player.file, trim.inPoint, trim.outPoint);
+		if (!player.file || trim.segments.length === 0 || trim.totalDuration <= 0.05) return;
+		void exporter.start(player.file, trim.segments, undefined, {
+			sourceWidth: player.width,
+			sourceHeight: player.height
+		});
 	}
 
 	function onBackdropClick() {

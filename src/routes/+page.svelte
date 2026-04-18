@@ -22,9 +22,12 @@
 
 	function onExport() {
 		if (!player.file || !player.ready) return;
-		if (trim.totalDuration <= 0.05) return;
+		if (trim.segments.length === 0 || trim.totalDuration <= 0.05) return;
 		player.pause();
-		void exporter.start(player.file, trim.inPoint, trim.outPoint);
+		void exporter.start(player.file, trim.segments, undefined, {
+			sourceWidth: player.width,
+			sourceHeight: player.height
+		});
 	}
 
 	function previewTrim() {
