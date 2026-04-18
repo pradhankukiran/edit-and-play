@@ -30,7 +30,7 @@
 
 	<div class="rail bottom">
 		<span class="plate">serial 00-016-0000-A</span>
-		<span class="plate">svelte · vercel · ffmpeg.wasm</span>
+		<span class="plate">ffmpeg.wasm</span>
 	</div>
 </div>
 
