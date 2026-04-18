@@ -26,39 +26,6 @@ Cut multi-segments, grab frames, drop markers, and export MP4 / WebM / animated 
 
 ---
 
-## ▶ &nbsp;PREVIEW
-
-```text
-┌─ [ EDIT·AND·PLAY ] ───────────────────────────────── [●PWR] ┐
-│                                                             │
-│  ┌─ [ VIEWPORT ] ─────────────────────┐  ┌─ [ STATUS ] ──┐  │
-│  │                                    │  │  T/C          │  │
-│  │        (video / drop zone)         │  │  ██:██:██:██  │  │
-│  │                                    │  │               │  │
-│  └────────────────────────────────────┘  │  L ▓▓▓░░░░░░░ │  │
-│   ▼   ▼   ▼       ▼  MARKERS             │  R ▓▓░░░░░░░░ │  │
-│  ╔═[ TIMELINE ]════════════════════════╗ │               │  │
-│  ║█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║ │  ●REC  ●RDY   │  │
-│  ║▂▃▂▄▂▃▂▅▂▃▂▄▂▃▂▅▂▃▂▄▂▃▂▅▂▃▂▄▂▃▂▅▂▃▂▄║ │  MUTE SFX EJCT│  │
-│  ║  │I█████O│       │I████O│           ║ │               │  │
-│  ╚═════════════════════════════════════╝ │  DUR  SEL  MRK│  │
-│                                          ├───[ TRANSPORT ]┤  │
-│                                          │               │  │
-│                                          │  ◀◀  ▶  ▶▶    │  │
-│                                          │   IN ✂ OUT    │  │
-│                                          │     DEL       │  │
-│                                          │     GRAB      │  │
-│                                          │   [ EXPORT ]  │  │
-│                                          │               │  │
-│                                          │      ◉        │  │
-│                                          │      JOG      │  │
-│                                          └───────────────┘  │
-│                                                             │
-└─ serial 00-016-0000-A ────────────────────── ffmpeg.wasm ───┘
-```
-
----
-
 ## ◉ &nbsp;WHAT IT DOES
 
 - **Multi-cut splice** — mark any number of IN/OUT segments, rearrange and split them on the timeline, concatenated on export
@@ -79,29 +46,6 @@ Think *Elgato Stream Deck × Ableton Push × DaVinci Resolve's control surface.*
 
 Everything is CSS + SVG. No raster textures, no design-system library, no flat-color Tailwind.
 Every gradient, shadow, and LED glow is hand-built against `src/lib/styles/tokens.css`.
-
----
-
-## ◐ &nbsp;WHAT'S SHOWCASED
-
-| **Svelte 5 / SvelteKit feature** | **Where** |
-|---|---|
-| Runes (`$state` / `$derived` / `$effect` / `$props`) | All state modules |
-| Rune classes in `.svelte.ts` | `player` · `trim` · `markers` · `export` · `ui` · `waveform` |
-| `use:` actions | `draggable` · `jogwheel` · `hotkey` |
-| Snippets (`{#snippet}` / `{@render}`) | `Console` body |
-| Transitions (`fly` · `scale` · `fade`) | Export modal · error banner |
-| SvelteKit `adapter-vercel` + `prerender` | Zero runtime server cost |
-
-| **Engineering feature** | **File** |
-|---|---|
-| Frame thumbnail extraction | `lib/media/thumbnails.ts` |
-| Audio waveform peaks (`OfflineAudioContext`) | `lib/media/waveform.ts` |
-| Multi-segment trim + concat + transcode via `ffmpeg.wasm` | `lib/media/ffmpeg.ts` |
-| Frame capture via `canvas.drawImage` | `lib/media/framegrab.ts` |
-| Procedural button / chirp sounds (WebAudio) | `lib/media/sfx.ts` |
-| Rotary jog wheel (pointer → angle → inertia) | `lib/actions/jogwheel.ts` |
-| Cross-origin isolation for `SharedArrayBuffer` | `vite.config.ts` + `vercel.json` |
 
 ---
 
@@ -127,61 +71,6 @@ Every gradient, shadow, and LED glow is hand-built against `src/lib/styles/token
 
 Scrub by: dragging the playhead, clicking the timeline, or grabbing the jog wheel.
 Arrow keys nudge a focused slider (trim handle or playhead) by one frame.
-
----
-
-## ⏵ &nbsp;RUN LOCALLY
-
-```bash
-pnpm install       # vendors ffmpeg-core.{js,wasm} into static/ffmpeg/ via postinstall
-pnpm dev           # http://localhost:5173
-```
-
-Cross-origin isolation (COOP + COEP) is enforced by a custom Vite plugin in `vite.config.ts` —
-required for `SharedArrayBuffer`, which `ffmpeg.wasm` needs.
-
-```bash
-pnpm build && pnpm preview   # production bundle smoke test
-```
-
----
-
-## ▲ &nbsp;DEPLOY
-
-```bash
-vercel --prod
-```
-
-`vercel.json` sets COOP/COEP headers on every route and long-cache headers on `/ffmpeg/*` and `/fonts/*`.
-The whole app is prerendered — **no serverless functions**, static site only.
-
-**Source codec support:** whatever the browser's `<video>` element can decode (MP4/H.264 is the safe bet).
-**Fast path:** MP4 · 1× · source aspect → stream-copy (`-c copy`), finishes in under a second.
-**Re-encode path:** any other combo forces `libx264`/`libvpx-vp9`/GIF two-pass — the modal's `ENCODE/COPY` badge tells you which.
-**GIF output** is capped at 15 fps / 480 px wide (WASM encoding is CPU-heavy).
-
----
-
-## ▦ &nbsp;PROJECT LAYOUT
-
-```text
-src/
-├── routes/
-│   ├── +layout.svelte          app.css import + meta
-│   ├── +layout.ts              prerender = true
-│   └── +page.svelte            hotkey wiring + console assembly
-├── lib/
-│   ├── components/             Console · Viewport · Timeline · TransportBar · StatusStrip
-│   │                           TrimHandle · Playhead · JogWheel · VUMeter · LED
-│   │                           ExportModal · DropZone · ErrorBanner · Timecode · KnobButton
-│   ├── actions/                draggable · jogwheel · hotkey
-│   ├── state/                  player · trim · markers · export · ui · waveform  (rune classes)
-│   ├── media/                  thumbnails · waveform · ffmpeg · framegrab · sfx
-│   └── styles/                 tokens.css (@theme) · fonts.css · base.css
-static/
-├── ffmpeg/                     vendored ffmpeg-core.{js,wasm}  (gitignored)
-└── fonts/                      DSEG7 Classic (7-seg display face)
-```
 
 ---
 
