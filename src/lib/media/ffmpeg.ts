@@ -82,12 +82,11 @@ export async function trimVideo(file: File, opts: TrimOptions): Promise<TrimResu
 		const mime = mimeFor(ext);
 		const blob = new Blob([bytes as BlobPart], { type: mime });
 
-		await ffmpeg.deleteFile(inputName).catch(() => {});
-		await ffmpeg.deleteFile(outputName).catch(() => {});
-
 		return { blob, mime, extension: ext };
 	} finally {
 		ffmpeg.off('progress', progressHandler);
+		await ffmpeg.deleteFile(inputName).catch(() => {});
+		await ffmpeg.deleteFile(outputName).catch(() => {});
 	}
 }
 
