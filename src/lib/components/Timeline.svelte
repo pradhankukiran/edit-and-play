@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
+	import { trim } from '$lib/state/trim.svelte';
 	import { extractThumbnails, releaseThumbs, type Thumb } from '$lib/media/thumbnails';
 	import { extractWaveform } from '$lib/media/waveform';
+	import TrimHandle from './TrimHandle.svelte';
 	import { onDestroy } from 'svelte';
 
 	let thumbs = $state<Thumb[]>([]);
@@ -10,6 +12,14 @@
 	let wfCanvas: HTMLCanvasElement;
 	let wfAbort: AbortController | null = null;
 	let thumbAbort: AbortController | null = null;
+	let trackEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (player.ready) trim.reset(player.duration);
+	});
+
+	const inPct = $derived(player.duration > 0 ? trim.inPoint / player.duration : 0);
+	const outPct = $derived(player.duration > 0 ? trim.outPoint / player.duration : 1);
 
 	$effect(() => {
 		const url = player.url;
@@ -113,24 +123,55 @@
 <div class="timeline">
 	<div class="perf top" aria-hidden="true"></div>
 
-	<div class="strip">
-		{#if thumbs.length === 0 && loading}
-			{#each Array(60) as _, i (i)}
-				<div class="thumb placeholder" style="--delay: {i * 18}ms"></div>
-			{/each}
-		{:else}
-			{#each thumbs as t (t.t)}
-				<div class="thumb">
-					<img src={t.url} alt="" />
-				</div>
-			{/each}
-		{/if}
-	</div>
+	<div class="track" bind:this={trackEl}>
+		<div class="strip">
+			{#if thumbs.length === 0 && loading}
+				{#each Array(60) as _, i (i)}
+					<div class="thumb placeholder" style="--delay: {i * 18}ms"></div>
+				{/each}
+			{:else}
+				{#each thumbs as t (t.t)}
+					<div class="thumb">
+						<img src={t.url} alt="" />
+					</div>
+				{/each}
+			{/if}
+		</div>
 
-	<div class="waveform">
-		<canvas bind:this={wfCanvas}></canvas>
-		{#if !peaks && player.ready}
-			<div class="wf-status">analyzing audio…</div>
+		<div class="waveform">
+			<canvas bind:this={wfCanvas}></canvas>
+			{#if !peaks && player.ready}
+				<div class="wf-status">analyzing audio…</div>
+			{/if}
+		</div>
+
+		{#if player.ready}
+			<div class="selection" style="--in: {inPct * 100}%; --out: {outPct * 100}%"></div>
+			<div class="mask left" style="--w: {inPct * 100}%"></div>
+			<div class="mask right" style="--w: {(1 - outPct) * 100}%"></div>
+
+			<TrimHandle
+				variant="in"
+				percent={inPct}
+				time={trim.inPoint}
+				fps={player.fps}
+				{trackEl}
+				onmove={(pct) => {
+					trim.setIn(pct * player.duration);
+					player.seek(trim.inPoint);
+				}}
+			/>
+			<TrimHandle
+				variant="out"
+				percent={outPct}
+				time={trim.outPoint}
+				fps={player.fps}
+				{trackEl}
+				onmove={(pct) => {
+					trim.setOut(pct * player.duration);
+					player.seek(trim.outPoint);
+				}}
+			/>
 		{/if}
 	</div>
 
@@ -151,12 +192,54 @@
 		overflow: hidden;
 	}
 
+	.track {
+		position: relative;
+		width: 100%;
+	}
+
 	.strip {
 		display: flex;
 		width: 100%;
 		height: 72px;
 		gap: 0;
 		background: #000;
+	}
+
+	.selection {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: var(--in);
+		right: calc(100% - var(--out));
+		pointer-events: none;
+		background: linear-gradient(
+			to bottom,
+			rgba(255, 180, 0, 0.04) 0%,
+			rgba(255, 180, 0, 0.02) 100%
+		);
+		box-shadow:
+			inset 1px 0 0 rgba(255, 180, 0, 0.5),
+			inset -1px 0 0 rgba(255, 180, 0, 0.5);
+		z-index: 1;
+	}
+
+	.mask {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.55);
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.mask.left {
+		left: 0;
+		width: var(--w);
+	}
+
+	.mask.right {
+		right: 0;
+		width: var(--w);
 	}
 
 	.thumb {
