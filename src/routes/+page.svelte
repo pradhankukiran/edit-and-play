@@ -11,6 +11,7 @@
 	import Console from '$lib/components/Console.svelte';
 	import StatusStrip from '$lib/components/StatusStrip.svelte';
 	import ExportModal from '$lib/components/ExportModal.svelte';
+	import ErrorBanner from '$lib/components/ErrorBanner.svelte';
 
 	function markIn() {
 		trim.setIn(player.currentTime);
@@ -63,6 +64,7 @@
 		</div>
 	{:else}
 		<Console>
+			<ErrorBanner message={player.error} ondismiss={() => (player.error = null)} />
 			<StatusStrip />
 			<Viewport />
 			<Timeline />
