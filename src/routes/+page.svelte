@@ -3,6 +3,7 @@
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
+	import Timeline from '$lib/components/Timeline.svelte';
 </script>
 
 <svelte:head>
@@ -19,6 +20,7 @@
 	{:else}
 		<div class="stage">
 			<Viewport />
+			<Timeline />
 			<TransportBar />
 		</div>
 	{/if}
