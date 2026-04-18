@@ -2,7 +2,7 @@
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
 	import { exporter } from '$lib/state/export.svelte';
-	import { hotkey } from '$lib/actions/hotkey';
+	import { hotkey, type HotkeyMap } from '$lib/actions/hotkey';
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
@@ -33,22 +33,34 @@
 		player.play();
 	}
 
-	const shortcuts = $derived({
-		space: () => player.ready && player.toggle(),
-		i: () => player.ready && markIn(),
-		o: () => player.ready && markOut(),
-		e: () => player.ready && onExport(),
-		enter: () => player.ready && previewTrim(),
-		arrowleft: () => player.ready && player.step(-1),
-		arrowright: () => player.ready && player.step(1),
-		'shift+arrowleft': () => player.ready && player.seek(player.currentTime - 1),
-		'shift+arrowright': () => player.ready && player.seek(player.currentTime + 1),
-		home: () => player.ready && player.seek(0),
-		end: () => player.ready && player.seek(player.duration),
-		j: () => player.ready && player.setRate(-2),
-		k: () => player.ready && (player.setRate(1), player.pause()),
-		l: () => player.ready && (player.setRate(2), player.play())
-	});
+	const shortcutsActive = $derived(player.ready && exporter.status === 'idle');
+
+	const shortcuts: HotkeyMap = $derived(
+		shortcutsActive
+			? {
+					space: () => player.toggle(),
+					i: markIn,
+					o: markOut,
+					e: onExport,
+					enter: previewTrim,
+					arrowleft: () => player.step(-1),
+					arrowright: () => player.step(1),
+					'shift+arrowleft': () => player.seek(player.currentTime - 1),
+					'shift+arrowright': () => player.seek(player.currentTime + 1),
+					home: () => player.seek(0),
+					end: () => player.seek(player.duration),
+					j: () => player.setRate(-2),
+					k: () => {
+						player.setRate(1);
+						player.pause();
+					},
+					l: () => {
+						player.setRate(2);
+						player.play();
+					}
+				}
+			: ({} as HotkeyMap)
+	);
 </script>
 
 <svelte:head>
