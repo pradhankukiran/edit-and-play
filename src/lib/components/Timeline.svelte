@@ -46,12 +46,37 @@
 	}
 
 	function onScrub(pct: number) {
-		player.seek(pct * player.duration);
+		queueSeek(pct * player.duration);
 	}
 
 	function onScrubEnd() {
+		flushSeek();
 		if (wasPlaying) player.play();
 		wasPlaying = false;
+	}
+
+	let pendingSeek: number | null = null;
+	let seekRaf: number | null = null;
+
+	function queueSeek(t: number) {
+		pendingSeek = t;
+		if (seekRaf !== null) return;
+		seekRaf = requestAnimationFrame(() => {
+			seekRaf = null;
+			if (pendingSeek !== null) {
+				player.seek(pendingSeek);
+				pendingSeek = null;
+			}
+		});
+	}
+
+	function flushSeek() {
+		if (seekRaf !== null) cancelAnimationFrame(seekRaf);
+		seekRaf = null;
+		if (pendingSeek !== null) {
+			player.seek(pendingSeek);
+			pendingSeek = null;
+		}
 	}
 
 	$effect(() => {
@@ -209,10 +234,12 @@
 				time={trim.inPoint}
 				fps={player.fps}
 				{trackEl}
+				onstart={onScrubStart}
 				onmove={(pct) => {
 					trim.setIn(pct * player.duration);
-					player.seek(trim.inPoint);
+					queueSeek(trim.inPoint);
 				}}
+				onend={onScrubEnd}
 			/>
 			<TrimHandle
 				variant="out"
@@ -220,10 +247,12 @@
 				time={trim.outPoint}
 				fps={player.fps}
 				{trackEl}
+				onstart={onScrubStart}
 				onmove={(pct) => {
 					trim.setOut(pct * player.duration);
-					player.seek(trim.outPoint);
+					queueSeek(trim.outPoint);
 				}}
+				onend={onScrubEnd}
 			/>
 
 			<Playhead
