@@ -1,3 +1,5 @@
+import { grabFrame } from '$lib/media/framegrab';
+
 class PlayerState {
 	file = $state<File | null>(null);
 	url = $state<string | null>(null);
@@ -111,6 +113,11 @@ class PlayerState {
 		if (!this.ready) return;
 		this.setRate(1);
 		this.pause();
+	}
+
+	async captureFrame(): Promise<Blob | null> {
+		if (!this.#videoEl || !this.ready) return null;
+		return grabFrame(this.#videoEl);
 	}
 
 	clear() {

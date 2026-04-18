@@ -5,10 +5,11 @@
 	interface Props {
 		onmarkIn?: () => void;
 		onmarkOut?: () => void;
+		ongrab?: () => void;
 		onexport?: () => void;
 	}
 
-	let { onmarkIn, onmarkOut, onexport }: Props = $props();
+	let { onmarkIn, onmarkOut, ongrab, onexport }: Props = $props();
 </script>
 
 <div class="bar">
@@ -51,6 +52,16 @@
 			sublabel="[O]"
 			accent="amber"
 			onclick={() => onmarkOut?.()}
+			disabled={!player.ready}
+		/>
+	</div>
+
+	<div class="row grab">
+		<KnobButton
+			label="GRAB"
+			sublabel="[G]"
+			accent="xenon"
+			onclick={() => ongrab?.()}
 			disabled={!player.ready}
 		/>
 	</div>
@@ -110,6 +121,11 @@
 	}
 
 	.row.marks {
+		justify-content: space-between;
+		padding: 0 4px;
+	}
+
+	.row.grab {
 		justify-content: space-between;
 		padding: 0 4px;
 	}
