@@ -122,6 +122,13 @@
 	@media (max-width: 720px) {
 		.controls {
 			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+	}
+
+	@media (max-width: 480px) {
+		main {
+			padding: 12px;
 		}
 	}
 </style>

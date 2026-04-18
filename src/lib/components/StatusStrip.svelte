@@ -74,6 +74,19 @@
 			<LED color="green" on={ui.soundEnabled} />
 			<span class="lbl" data-on={ui.soundEnabled}>SFX</span>
 		</button>
+
+		<button
+			type="button"
+			class="mute eject"
+			onclick={() => {
+				clickSfx();
+				player.clear();
+			}}
+			aria-label="Eject and load a different video"
+		>
+			<span class="eject-icon">⏏</span>
+			<span class="lbl">EJECT</span>
+		</button>
 	</div>
 
 	<div class="center">
@@ -171,6 +184,21 @@
 	.mute .lbl[data-on='true'] {
 		color: var(--color-led-amber);
 		text-shadow: 0 0 6px rgba(255, 180, 0, 0.5);
+	}
+
+	.eject .eject-icon {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		text-align: center;
+		line-height: 10px;
+		color: #9aa3ab;
+		font-size: 11px;
+	}
+
+	.eject:hover .eject-icon,
+	.eject:hover .lbl {
+		color: var(--color-led-xenon);
 	}
 
 	.center {
