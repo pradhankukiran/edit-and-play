@@ -4,6 +4,7 @@
 	import { extractThumbnails, releaseThumbs, type Thumb } from '$lib/media/thumbnails';
 	import { extractWaveform } from '$lib/media/waveform';
 	import TrimHandle from './TrimHandle.svelte';
+	import Playhead from './Playhead.svelte';
 	import { onDestroy } from 'svelte';
 
 	let thumbs = $state<Thumb[]>([]);
@@ -20,6 +21,34 @@
 
 	const inPct = $derived(player.duration > 0 ? trim.inPoint / player.duration : 0);
 	const outPct = $derived(player.duration > 0 ? trim.outPoint / player.duration : 1);
+	const playheadPct = $derived(
+		player.duration > 0 ? player.currentTime / player.duration : 0
+	);
+
+	let wasPlaying = false;
+
+	function onTrackClick(e: MouseEvent) {
+		if (!trackEl || !player.ready) return;
+		const target = e.target as HTMLElement;
+		if (target.closest('[role="slider"]')) return;
+		const rect = trackEl.getBoundingClientRect();
+		const pct = (e.clientX - rect.left) / rect.width;
+		player.seek(pct * player.duration);
+	}
+
+	function onScrubStart() {
+		wasPlaying = player.playing;
+		if (wasPlaying) player.pause();
+	}
+
+	function onScrub(pct: number) {
+		player.seek(pct * player.duration);
+	}
+
+	function onScrubEnd() {
+		if (wasPlaying) player.play();
+		wasPlaying = false;
+	}
 
 	$effect(() => {
 		const url = player.url;
@@ -123,7 +152,7 @@
 <div class="timeline">
 	<div class="perf top" aria-hidden="true"></div>
 
-	<div class="track" bind:this={trackEl}>
+	<div class="track" bind:this={trackEl} onclick={onTrackClick} role="presentation">
 		<div class="strip">
 			{#if thumbs.length === 0 && loading}
 				{#each Array(60) as _, i (i)}
@@ -172,6 +201,14 @@
 					player.seek(trim.outPoint);
 				}}
 			/>
+
+			<Playhead
+				percent={playheadPct}
+				{trackEl}
+				onscrubStart={onScrubStart}
+				onscrub={onScrub}
+				onscrubEnd={onScrubEnd}
+			/>
 		{/if}
 	</div>
 
@@ -195,6 +232,7 @@
 	.track {
 		position: relative;
 		width: 100%;
+		cursor: pointer;
 	}
 
 	.strip {

@@ -1,9 +1,22 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
+	import { trim } from '$lib/state/trim.svelte';
 	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
+
+	function markIn() {
+		trim.setIn(player.currentTime);
+	}
+
+	function markOut() {
+		trim.setOut(player.currentTime);
+	}
+
+	function onExport() {
+		// wired in phase 8
+	}
 </script>
 
 <svelte:head>
@@ -21,7 +34,7 @@
 		<div class="stage">
 			<Viewport />
 			<Timeline />
-			<TransportBar />
+			<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
 		</div>
 	{/if}
 </main>
