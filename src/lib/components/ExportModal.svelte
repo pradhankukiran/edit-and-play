@@ -37,6 +37,11 @@
 		void exporter.start(player.file, trim.inPoint, trim.outPoint);
 	}
 
+	function onBackdropClick() {
+		if (exporter.status === 'loading' || exporter.status === 'encoding') return;
+		dismiss();
+	}
+
 	function fmtBytes(n: number): string {
 		if (n < 1024) return `${n} B`;
 		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -45,7 +50,7 @@
 </script>
 
 {#if open}
-	<div class="backdrop" transition:fade={{ duration: 180 }} onclick={dismiss} role="presentation">
+	<div class="backdrop" transition:fade={{ duration: 180 }} onclick={onBackdropClick} role="presentation">
 		<div
 			class="panel"
 			transition:scale={{ duration: 220, start: 0.92 }}
