@@ -1,1 +1,22 @@
-/* Font-face rules added in the fonts commit. */
+/* Self-hosted fonts. DSEG7 Classic vendored into /static/fonts/,
+   JetBrains Mono / Space Grotesk / Oswald via @fontsource. */
+
+@import '@fontsource-variable/space-grotesk/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import '@fontsource/oswald/700.css';
+
+@font-face {
+	font-family: 'DSEG7 Classic';
+	src: url('/fonts/DSEG7Classic-Regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'DSEG7 Classic';
+	src: url('/fonts/DSEG7Classic-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
