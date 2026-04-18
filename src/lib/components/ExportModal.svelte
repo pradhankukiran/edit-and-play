@@ -11,9 +11,29 @@
 	const segments = 24;
 	const open = $derived(exporter.status !== 'idle');
 
+	let panelEl: HTMLDivElement | null = $state(null);
+	let priorFocus: HTMLElement | null = null;
+	let wasOpen = false;
+
 	$effect(() => {
 		if (exporter.status === 'done') chirp(true);
 		if (exporter.status === 'error') chirp(false);
+	});
+
+	$effect(() => {
+		if (open && !wasOpen) {
+			priorFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+			queueMicrotask(() => {
+				const target =
+					panelEl?.querySelector<HTMLButtonElement>('button:not(:disabled)') ?? panelEl;
+				target?.focus();
+			});
+			wasOpen = true;
+		} else if (!open && wasOpen) {
+			priorFocus?.focus();
+			priorFocus = null;
+			wasOpen = false;
+		}
 	});
 
 	function download() {
@@ -56,6 +76,7 @@
 {#if open}
 	<div class="backdrop" transition:fade={{ duration: 180 }} onclick={onBackdropClick} role="presentation">
 		<div
+			bind:this={panelEl}
 			class="panel"
 			transition:scale={{ duration: 220, start: 0.92 }}
 			onclick={(e) => e.stopPropagation()}
