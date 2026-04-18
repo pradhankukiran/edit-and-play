@@ -47,3 +47,6 @@ coverage/
 # Misc
 .cache/
 tmp/
+
+# Vendored ffmpeg core (populated by scripts/vendor-ffmpeg.mjs on install)
+static/ffmpeg/
