@@ -3,7 +3,6 @@
 	import { trim } from '$lib/state/trim.svelte';
 	import { exporter } from '$lib/state/export.svelte';
 	import { hotkey, type HotkeyMap } from '$lib/actions/hotkey';
-	import DropZone from '$lib/components/DropZone.svelte';
 	import Viewport from '$lib/components/Viewport.svelte';
 	import TransportBar from '$lib/components/TransportBar.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
@@ -62,30 +61,22 @@
 </svelte:head>
 
 <main use:hotkey={shortcuts}>
-	{#if !player.url}
-		<div class="intro">
-			<h1>edit-and-play</h1>
-			<p class="subtitle">a tactile video trimmer</p>
-			<DropZone />
+	<Console>
+		<ErrorBanner message={player.error} ondismiss={() => (player.error = null)} />
+		<div class="workbench">
+			<section class="screen">
+				<Viewport />
+				<Timeline />
+			</section>
+			<aside class="rail">
+				<StatusStrip />
+				<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
+				<div class="jog-mount">
+					<JogWheel />
+				</div>
+			</aside>
 		</div>
-	{:else}
-		<Console>
-			<ErrorBanner message={player.error} ondismiss={() => (player.error = null)} />
-			<div class="workbench">
-				<section class="screen">
-					<Viewport />
-					<Timeline />
-				</section>
-				<aside class="rail">
-					<StatusStrip />
-					<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
-					<div class="jog-mount">
-						<JogWheel />
-					</div>
-				</aside>
-			</div>
-		</Console>
-	{/if}
+	</Console>
 
 	<ExportModal />
 </main>
@@ -96,32 +87,6 @@
 		display: grid;
 		place-items: center;
 		padding: 12px;
-	}
-
-	.intro {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 24px;
-	}
-
-	h1 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 48px;
-		letter-spacing: 0.22em;
-		color: var(--color-led-xenon);
-		text-transform: uppercase;
-	}
-
-	.subtitle {
-		margin: -18px 0 12px;
-		font-family: var(--font-data);
-		font-size: 11px;
-		letter-spacing: 0.4em;
-		color: #5a6066;
-		text-transform: uppercase;
 	}
 
 	.workbench {

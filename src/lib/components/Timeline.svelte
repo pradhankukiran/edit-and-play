@@ -201,7 +201,9 @@
 
 	<div class="track" bind:this={trackEl} onclick={onTrackClick} role="presentation">
 		<div class="strip">
-			{#if thumbs.length === 0 && loading}
+			{#if !player.url}
+				<div class="strip-idle">AWAITING MEDIA</div>
+			{:else if thumbs.length === 0 && loading}
 				{#each Array(60) as _, i (i)}
 					<div class="thumb placeholder" style="--delay: {i * 18}ms"></div>
 				{/each}
@@ -311,6 +313,22 @@
 		height: 72px;
 		gap: 0;
 		background: #000;
+	}
+
+	.strip-idle {
+		flex: 1;
+		display: grid;
+		place-items: center;
+		font-family: var(--font-data);
+		font-size: 10px;
+		letter-spacing: 0.38em;
+		color: #3a3f44;
+		text-transform: uppercase;
+		background-image: repeating-linear-gradient(
+			45deg,
+			rgba(255, 255, 255, 0.015) 0 2px,
+			transparent 2px 8px
+		);
 	}
 
 	.selection {

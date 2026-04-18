@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { onMount } from 'svelte';
+	import DropZone from './DropZone.svelte';
 
 	let videoEl: HTMLVideoElement;
 
@@ -48,7 +49,11 @@
 		<span class="tick bottom-center"></span>
 	</div>
 
-	{#if !player.ready}
+	{#if !player.url}
+		<div class="dropzone-mount">
+			<DropZone />
+		</div>
+	{:else if !player.ready}
 		<div class="placeholder" aria-hidden="true">
 			<div class="cross"></div>
 		</div>
@@ -85,6 +90,15 @@
 		place-items: center;
 		background:
 			radial-gradient(ellipse at center, rgba(28, 42, 30, 0.25), transparent 70%),
+			#000;
+	}
+
+	.dropzone-mount {
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		background:
+			radial-gradient(ellipse at center, rgba(28, 42, 30, 0.3), transparent 70%),
 			#000;
 	}
 

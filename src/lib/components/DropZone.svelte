@@ -78,24 +78,25 @@
 
 <style>
 	.dropzone {
-		width: min(640px, 90vw);
+		width: 100%;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 8px;
 		cursor: pointer;
 		user-select: none;
 	}
 
 	.frame {
 		position: relative;
-		background: var(--color-well);
-		border: 1px solid #000;
-		box-shadow:
-			inset 0 2px 6px rgba(0, 0, 0, 0.9),
-			inset 0 -1px 0 var(--color-steel-hi),
-			0 1px 0 rgba(255, 255, 255, 0.04);
-		padding: 56px 48px;
+		flex: 1;
+		background: transparent;
+		border: 0;
+		box-shadow: none;
+		padding: 0;
 		overflow: hidden;
+		display: grid;
+		place-items: center;
 		transition: box-shadow 180ms var(--ease-mechanical);
 	}
 
@@ -103,8 +104,13 @@
 	.dragging .frame {
 		box-shadow:
 			inset 0 0 0 1px var(--color-led-amber),
-			inset 0 2px 6px rgba(0, 0, 0, 0.9),
 			0 0 18px rgba(255, 180, 0, 0.18);
+	}
+
+	.dragging .frame {
+		box-shadow:
+			inset 0 0 0 1px var(--color-led-green),
+			0 0 22px rgba(59, 255, 124, 0.28);
 	}
 
 	.corner {
