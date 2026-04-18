@@ -1,12 +1,33 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { markers } from '$lib/state/markers.svelte';
 	import { extractThumbnails, releaseThumbs, type Thumb } from '$lib/media/thumbnails';
 	import { extractWaveform } from '$lib/media/waveform';
 	import { waveform } from '$lib/state/waveform.svelte';
 	import TrimHandle from './TrimHandle.svelte';
 	import Playhead from './Playhead.svelte';
 	import { onDestroy, untrack } from 'svelte';
+
+	function formatSMPTE(t: number, fps: number): string {
+		const v = Math.max(0, t);
+		const hh = Math.floor(v / 3600);
+		const mm = Math.floor((v % 3600) / 60);
+		const ss = Math.floor(v % 60);
+		const ff = Math.floor((v % 1) * fps);
+		return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}:${String(ff).padStart(2, '0')}`;
+	}
+
+	function onMarkerClick(e: MouseEvent, time: number) {
+		e.stopPropagation();
+		player.seek(time);
+	}
+
+	function onMarkerContextMenu(e: MouseEvent, id: string) {
+		e.preventDefault();
+		e.stopPropagation();
+		markers.remove(id);
+	}
 
 	let thumbs = $state<Thumb[]>([]);
 	let loading = $state(false);
@@ -199,7 +220,32 @@
 <div class="timeline">
 	<div class="perf top" aria-hidden="true"></div>
 
+	<div class="marker-row" aria-hidden={!player.ready}>
+		{#if player.ready && player.duration > 0}
+			{#each markers.list as m (m.id)}
+				<button
+					type="button"
+					class="marker-glyph"
+					style="--pct: {(m.time / player.duration) * 100}%"
+					onclick={(e) => onMarkerClick(e, m.time)}
+					oncontextmenu={(e) => onMarkerContextMenu(e, m.id)}
+					aria-label="Marker {m.label} at {formatSMPTE(m.time, player.fps)}"
+				>
+					<span class="triangle"></span>
+					<span class="tooltip">{m.label} · {formatSMPTE(m.time, player.fps)}</span>
+				</button>
+			{/each}
+		{/if}
+	</div>
+
 	<div class="track" bind:this={trackEl} onclick={onTrackClick} role="presentation">
+		{#if player.ready && player.duration > 0}
+			<div class="marker-lines" aria-hidden="true">
+				{#each markers.list as m (m.id)}
+					<div class="marker-line" style="--pct: {(m.time / player.duration) * 100}%"></div>
+				{/each}
+			</div>
+		{/if}
 		<div class="strip">
 			{#if !player.url}
 				<div class="strip-idle">AWAITING MEDIA</div>
@@ -450,5 +496,98 @@
 		.thumb.placeholder {
 			animation: none;
 		}
+	}
+
+	.marker-row {
+		position: relative;
+		height: 12px;
+		width: 100%;
+	}
+
+	.marker-glyph {
+		position: absolute;
+		top: 0;
+		left: var(--pct);
+		transform: translateX(-50%);
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		margin: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+		display: grid;
+		place-items: center;
+		z-index: 4;
+	}
+
+	.triangle {
+		width: 8px;
+		height: 6px;
+		background: var(--color-led-green);
+		clip-path: polygon(0 0, 100% 0, 50% 100%);
+		filter: drop-shadow(0 0 3px rgba(59, 255, 124, 0.7))
+			drop-shadow(0 0 6px rgba(59, 255, 124, 0.35));
+		transition: filter 120ms, transform 120ms;
+	}
+
+	.marker-glyph:hover .triangle,
+	.marker-glyph:focus-visible .triangle {
+		filter: drop-shadow(0 0 4px rgba(59, 255, 124, 0.9))
+			drop-shadow(0 0 10px rgba(59, 255, 124, 0.55));
+		transform: scale(1.15);
+	}
+
+	.marker-glyph:focus-visible {
+		outline: 1px solid var(--color-led-xenon);
+		outline-offset: 2px;
+	}
+
+	.tooltip {
+		position: absolute;
+		bottom: calc(100% + 4px);
+		left: 50%;
+		transform: translateX(-50%);
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 120ms;
+		z-index: 10;
+		padding: 4px 8px;
+		background: var(--color-well);
+		border-radius: var(--radius-panel);
+		box-shadow:
+			inset 0 1px 0 var(--color-steel-hi),
+			inset 0 -1px 0 #000,
+			0 2px 6px rgba(0, 0, 0, 0.8);
+		font-family: var(--font-data);
+		font-size: 9px;
+		letter-spacing: 0.14em;
+		color: var(--color-led-green);
+		text-shadow: 0 0 4px rgba(59, 255, 124, 0.5);
+		white-space: nowrap;
+		text-transform: uppercase;
+	}
+
+	.marker-glyph:hover .tooltip,
+	.marker-glyph:focus-visible .tooltip {
+		opacity: 1;
+	}
+
+	.marker-lines {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.marker-line {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: var(--pct);
+		width: 1px;
+		transform: translateX(-50%);
+		background: rgba(59, 255, 124, 0.35);
+		box-shadow: 0 0 3px rgba(59, 255, 124, 0.3);
 	}
 </style>

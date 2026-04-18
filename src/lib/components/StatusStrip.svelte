@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
+	import { markers } from '$lib/state/markers.svelte';
 	import { ui } from '$lib/state/ui.svelte';
 	import { exporter } from '$lib/state/export.svelte';
 	import { click as clickSfx } from '$lib/media/sfx';
@@ -119,6 +120,7 @@
 		<div><span class="k">DUR</span><span class="v">{player.duration.toFixed(2)}s</span></div>
 		<div><span class="k">SEL</span><span class="v">{trim.totalDuration.toFixed(2)}s</span></div>
 		<div><span class="k">RES</span><span class="v">{resolution}</span></div>
+		<div><span class="k">MRK</span><span class="v">{markers.count}</span></div>
 		<div><span class="k">FPS</span><span class="v">{player.fps}</span></div>
 	</div>
 
