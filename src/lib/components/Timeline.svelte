@@ -317,12 +317,14 @@
 		pointer-events: none;
 		background: linear-gradient(
 			to bottom,
-			rgba(255, 180, 0, 0.04) 0%,
-			rgba(255, 180, 0, 0.02) 100%
+			rgba(255, 180, 0, 0.14) 0%,
+			rgba(255, 180, 0, 0.08) 100%
 		);
 		box-shadow:
-			inset 1px 0 0 rgba(255, 180, 0, 0.5),
-			inset -1px 0 0 rgba(255, 180, 0, 0.5);
+			inset 1px 0 0 rgba(255, 180, 0, 0.85),
+			inset -1px 0 0 rgba(255, 180, 0, 0.85),
+			inset 0 2px 0 rgba(255, 180, 0, 0.5),
+			inset 0 -2px 0 rgba(255, 180, 0, 0.5);
 		z-index: 1;
 	}
 
