@@ -119,10 +119,10 @@
 </script>
 
 <svelte:head>
-	<title>edit-and-play — tactile video trimmer</title>
+	<title>edit-and-play · tactile video editor in the browser</title>
 	<meta
 		name="description"
-		content="A tactile, broadcast-deck inspired video trimmer. 100% client-side, no upload. Built with Svelte."
+		content="A tactile, broadcast-deck inspired video editor. Multi-cut splice, frame grab, markers, and MP4/WebM/GIF export — all client-side via ffmpeg.wasm. Built with Svelte."
 	/>
 </svelte:head>
 
