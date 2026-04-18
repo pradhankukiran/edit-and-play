@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { player } from '$lib/state/player.svelte';
 	import KnobButton from './KnobButton.svelte';
-	import Timecode from './Timecode.svelte';
 
 	interface Props {
 		onmarkIn?: () => void;
@@ -13,18 +12,7 @@
 </script>
 
 <div class="bar">
-	<div class="group readout">
-		<Timecode time={player.currentTime} fps={player.fps} label="T/C" color="phosphor" />
-	</div>
-
-	<div class="group transport">
-		<KnobButton
-			label="IN"
-			sublabel="[I]"
-			accent="red"
-			onclick={() => onmarkIn?.()}
-			disabled={!player.ready}
-		/>
+	<div class="row primary">
 		<KnobButton
 			label="‹‹"
 			sublabel="FRAME"
@@ -48,6 +36,16 @@
 			onclick={() => player.step(1)}
 			disabled={!player.ready}
 		/>
+	</div>
+
+	<div class="row marks">
+		<KnobButton
+			label="IN"
+			sublabel="[I]"
+			accent="red"
+			onclick={() => onmarkIn?.()}
+			disabled={!player.ready}
+		/>
 		<KnobButton
 			label="OUT"
 			sublabel="[O]"
@@ -57,7 +55,7 @@
 		/>
 	</div>
 
-	<div class="group export">
+	<div class="row export">
 		<KnobButton
 			label="EXPORT"
 			sublabel="[E]"
@@ -72,11 +70,10 @@
 <style>
 	.bar {
 		position: relative;
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		align-items: center;
-		gap: 24px;
-		padding: 18px 22px 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 18px 16px 14px;
 		background:
 			repeating-linear-gradient(
 				90deg,
@@ -102,27 +99,25 @@
 		color: #4a4f54;
 	}
 
-	.group {
+	.row {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 	}
 
-	.transport {
+	.row.primary {
 		justify-content: center;
 	}
 
-	.export {
-		justify-self: end;
+	.row.marks {
+		justify-content: space-between;
+		padding: 0 4px;
 	}
 
-	@media (max-width: 720px) {
-		.bar {
-			grid-template-columns: 1fr;
-			gap: 12px;
-		}
-		.export {
-			justify-self: stretch;
-		}
+	.row.export {
+		justify-content: center;
+		padding-top: 4px;
+		border-top: 1px dashed rgba(255, 255, 255, 0.05);
+		margin-top: 2px;
 	}
 </style>

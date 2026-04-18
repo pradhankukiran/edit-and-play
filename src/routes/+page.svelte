@@ -65,12 +65,18 @@
 	{:else}
 		<Console>
 			<ErrorBanner message={player.error} ondismiss={() => (player.error = null)} />
-			<StatusStrip />
-			<Viewport />
-			<Timeline />
-			<div class="controls">
-				<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
-				<JogWheel />
+			<div class="workbench">
+				<section class="screen">
+					<Viewport />
+					<Timeline />
+				</section>
+				<aside class="rail">
+					<StatusStrip />
+					<TransportBar onmarkIn={markIn} onmarkOut={markOut} onexport={onExport} />
+					<div class="jog-mount">
+						<JogWheel />
+					</div>
+				</aside>
 			</div>
 		</Console>
 	{/if}
@@ -112,17 +118,36 @@
 		text-transform: uppercase;
 	}
 
-	.controls {
+	.workbench {
 		display: grid;
-		grid-template-columns: 1fr auto;
+		grid-template-columns: minmax(0, 1fr) 320px;
 		gap: 16px;
-		align-items: center;
+		align-items: start;
 	}
 
-	@media (max-width: 720px) {
-		.controls {
+	.screen {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		min-width: 0;
+	}
+
+	.rail {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+	}
+
+	.jog-mount {
+		display: grid;
+		place-items: center;
+		padding: 16px 0 4px;
+	}
+
+	@media (max-width: 1024px) {
+		.workbench {
 			grid-template-columns: 1fr;
-			justify-items: center;
 		}
 	}
 

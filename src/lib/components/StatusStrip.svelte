@@ -37,25 +37,37 @@
 		clickSfx();
 	}
 
+	function eject() {
+		clickSfx();
+		player.clear();
+	}
+
 	const resolution = $derived(player.width > 0 ? `${player.width}×${player.height}` : '----');
-	const selection = $derived(trim.selected);
 </script>
 
 <div class="status">
-	<div class="left">
-		<div class="group">
+	<div class="timecode-section">
+		<span class="section-tag">T/C</span>
+		<Timecode time={player.currentTime} fps={player.fps} size={20} color="phosphor" />
+	</div>
+
+	<VUMeter />
+
+	<div class="led-bar">
+		<span class="led-item">
 			<LED color="red" on={player.playing} blink={player.playing} />
 			<span class="lbl" data-on={player.playing}>REC</span>
-		</div>
-
-		<div class="group">
+		</span>
+		<span class="led-item">
 			<LED color="green" on={player.ready} />
 			<span class="lbl" data-on={player.ready}>RDY</span>
-		</div>
+		</span>
+	</div>
 
+	<div class="toggle-bar">
 		<button
 			type="button"
-			class="mute"
+			class="toggle"
 			onclick={toggleMute}
 			aria-pressed={player.muted}
 			aria-label="Toggle mute"
@@ -63,10 +75,9 @@
 			<LED color="amber" on={player.muted} />
 			<span class="lbl" data-on={player.muted}>MUTE</span>
 		</button>
-
 		<button
 			type="button"
-			class="mute"
+			class="toggle"
 			onclick={toggleSfx}
 			aria-pressed={ui.soundEnabled}
 			aria-label="Toggle interface sounds"
@@ -74,14 +85,10 @@
 			<LED color="green" on={ui.soundEnabled} />
 			<span class="lbl" data-on={ui.soundEnabled}>SFX</span>
 		</button>
-
 		<button
 			type="button"
-			class="mute eject"
-			onclick={() => {
-				clickSfx();
-				player.clear();
-			}}
+			class="toggle eject"
+			onclick={eject}
 			aria-label="Eject and load a different video"
 		>
 			<span class="eject-icon">⏏</span>
@@ -89,26 +96,17 @@
 		</button>
 	</div>
 
-	<div class="center">
-		<VUMeter />
+	<div class="data">
+		<div><span class="k">DUR</span><span class="v">{player.duration.toFixed(2)}s</span></div>
+		<div><span class="k">SEL</span><span class="v">{trim.selected.toFixed(2)}s</span></div>
+		<div><span class="k">RES</span><span class="v">{resolution}</span></div>
+		<div><span class="k">FPS</span><span class="v">{player.fps}</span></div>
 	</div>
 
-	<div class="right">
-		<div class="readout">
-			<span class="k">T/C</span>
-			<Timecode time={player.currentTime} fps={player.fps} size={16} />
-		</div>
-		<div class="data">
-			<div><span class="k">DUR</span> <span class="v">{player.duration.toFixed(2)}s</span></div>
-			<div><span class="k">SEL</span> <span class="v">{selection.toFixed(2)}s</span></div>
-			<div><span class="k">RES</span> <span class="v">{resolution}</span></div>
-			<div><span class="k">FPS</span> <span class="v">{player.fps}</span></div>
-		</div>
-		<div class="cpu">
-			<span class="k">LOAD</span>
-			<div class="cpu-bar" style="--w: {cpu * 100}%">
-				<div class="fill"></div>
-			</div>
+	<div class="cpu">
+		<span class="k">LOAD</span>
+		<div class="cpu-bar" style="--w: {cpu * 100}%">
+			<div class="fill"></div>
 		</div>
 	</div>
 </div>
@@ -116,11 +114,10 @@
 <style>
 	.status {
 		position: relative;
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		gap: 18px;
-		align-items: stretch;
-		padding: 14px 16px 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 18px 16px 14px;
 		background:
 			repeating-linear-gradient(
 				90deg,
@@ -138,7 +135,7 @@
 	.status::before {
 		content: 'STATUS';
 		position: absolute;
-		top: 3px;
+		top: 4px;
 		left: 10px;
 		font-family: var(--font-data);
 		font-size: 8px;
@@ -146,32 +143,55 @@
 		color: #4a4f54;
 	}
 
-	.left {
+	.timecode-section {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		justify-content: center;
+		align-items: center;
+		gap: 4px;
 	}
 
-	.group,
-	.mute {
+	.section-tag {
+		font-family: var(--font-data);
+		font-size: 9px;
+		letter-spacing: 0.32em;
+		color: #5a6066;
+		text-transform: uppercase;
+	}
+
+	.led-bar,
+	.toggle-bar {
 		display: flex;
+		justify-content: space-around;
+		flex-wrap: wrap;
+		gap: 6px 10px;
+		padding: 6px 0;
+	}
+
+	.toggle-bar {
+		padding-top: 2px;
+		padding-bottom: 6px;
+		border-top: 1px dashed rgba(255, 255, 255, 0.05);
+		border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+	}
+
+	.led-item,
+	.toggle {
+		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		background: none;
 		border: 0;
-		padding: 2px 0;
-		cursor: default;
+		padding: 2px 4px;
 	}
 
-	.mute {
+	.toggle {
 		cursor: pointer;
 	}
 
 	.lbl {
 		font-family: var(--font-data);
 		font-size: 9px;
-		letter-spacing: 0.24em;
+		letter-spacing: 0.22em;
 		color: #5a6066;
 		text-transform: uppercase;
 		transition: color 120ms, text-shadow 120ms;
@@ -181,7 +201,7 @@
 		color: var(--color-led-xenon);
 	}
 
-	.mute .lbl[data-on='true'] {
+	.toggle .lbl[data-on='true'] {
 		color: var(--color-led-amber);
 		text-shadow: 0 0 6px rgba(255, 180, 0, 0.5);
 	}
@@ -189,7 +209,6 @@
 	.eject .eject-icon {
 		display: inline-block;
 		width: 10px;
-		height: 10px;
 		text-align: center;
 		line-height: 10px;
 		color: #9aa3ab;
@@ -201,35 +220,22 @@
 		color: var(--color-led-xenon);
 	}
 
-	.center {
-		display: grid;
-		place-items: center;
-	}
-
-	.right {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-	}
-
-	.readout {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 2px;
-	}
-
 	.data {
 		display: grid;
-		grid-template-columns: auto auto;
-		gap: 1px 10px;
+		grid-template-columns: 1fr 1fr;
+		gap: 4px 10px;
 		font-family: var(--font-data);
 		font-size: 10px;
 		letter-spacing: 0.14em;
 	}
 
+	.data > div {
+		display: flex;
+		justify-content: space-between;
+		gap: 4px;
+	}
+
 	.data .k,
-	.readout .k,
 	.cpu .k {
 		color: #5a6066;
 		text-transform: uppercase;
@@ -241,14 +247,13 @@
 
 	.cpu {
 		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		min-width: 80px;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.cpu-bar {
 		position: relative;
-		width: 100%;
+		flex: 1;
 		height: 8px;
 		background: var(--color-well);
 		border-radius: 2px;
@@ -270,16 +275,5 @@
 		);
 		box-shadow: 0 0 6px rgba(59, 255, 124, 0.4);
 		transition: width 80ms linear;
-	}
-
-	@media (max-width: 720px) {
-		.status {
-			grid-template-columns: 1fr;
-			gap: 12px;
-		}
-		.right {
-			flex-wrap: wrap;
-			gap: 10px;
-		}
 	}
 </style>
