@@ -77,10 +77,7 @@
 		if (!player.file || !player.ready) return;
 		if (trim.segments.length === 0 || trim.totalDuration <= 0.05) return;
 		player.pause();
-		void exporter.start(player.file, trim.segments, undefined, {
-			sourceWidth: player.width,
-			sourceHeight: player.height
-		});
+		exporter.openConfig();
 	}
 
 	function previewTrim() {

@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { exporter } from '$lib/state/export.svelte';
+	import {
+		exporter,
+		exportOptions,
+		type Speed,
+		type Aspect,
+		type Format
+	} from '$lib/state/export.svelte';
 	import { player } from '$lib/state/player.svelte';
 	import { trim } from '$lib/state/trim.svelte';
 	import { chirp } from '$lib/media/sfx';
@@ -8,8 +14,9 @@
 	import KnobButton from './KnobButton.svelte';
 	import Timecode from './Timecode.svelte';
 
-	const segments = 24;
-	const open = $derived(exporter.status !== 'idle');
+	const segs = 24;
+	const open = $derived(exporter.configuring || exporter.status !== 'idle');
+	const configView = $derived(exporter.configuring && exporter.status === 'idle');
 
 	let panelEl: HTMLDivElement | null = $state(null);
 	let priorFocus: HTMLElement | null = null;
@@ -44,6 +51,14 @@
 		a.click();
 	}
 
+	function startExport() {
+		if (!player.file || trim.segments.length === 0 || trim.totalDuration <= 0.05) return;
+		void exporter.start(player.file, trim.segments, exportOptions.snapshot(), {
+			sourceWidth: player.width,
+			sourceHeight: player.height
+		});
+	}
+
 	function dismiss() {
 		if (exporter.status === 'encoding' || exporter.status === 'loading') {
 			exporter.cancel();
@@ -53,11 +68,7 @@
 	}
 
 	function retry() {
-		if (!player.file || trim.segments.length === 0 || trim.totalDuration <= 0.05) return;
-		void exporter.start(player.file, trim.segments, undefined, {
-			sourceWidth: player.width,
-			sourceHeight: player.height
-		});
+		startExport();
 	}
 
 	function onBackdropClick() {
@@ -72,12 +83,23 @@
 	}
 
 	const downloadLabel = $derived(
-		exporter.result ? `TRIM.${(exporter.result.filename.split('.').pop() ?? 'mp4').toUpperCase()}` : 'TRIM'
+		exporter.result
+			? `TRIM.${(exporter.result.filename.split('.').pop() ?? 'mp4').toUpperCase()}`
+			: 'TRIM'
 	);
+
+	const speeds: Speed[] = [0.5, 1, 2, 4];
+	const aspects: Aspect[] = ['source', '16:9', '9:16', '1:1'];
+	const formats: Format[] = ['mp4', 'webm', 'gif'];
 </script>
 
 {#if open}
-	<div class="backdrop" transition:fade={{ duration: 180 }} onclick={onBackdropClick} role="presentation">
+	<div
+		class="backdrop"
+		transition:fade={{ duration: 180 }}
+		onclick={onBackdropClick}
+		role="presentation"
+	>
 		<div
 			bind:this={panelEl}
 			class="panel"
@@ -95,55 +117,153 @@
 			</div>
 
 			<div class="meta">
-				<div class="row"><span class="k">IN</span><Timecode time={trim.inPoint} size={14} color="red" /></div>
-				<div class="row"><span class="k">OUT</span><Timecode time={trim.outPoint} size={14} color="amber" /></div>
-				<div class="row"><span class="k">DUR</span><Timecode time={trim.totalDuration} size={14} color="phosphor" /></div>
-			</div>
-
-			<div class="bar-wrap">
-				<div class="bar">
-					{#each Array(segments) as _, i (i)}
-						{@const ratio = (i + 1) / segments}
-						{@const lit = exporter.progress >= ratio - 1 / segments}
-						{@const color =
-							exporter.status === 'done'
-								? 'green'
-								: exporter.status === 'error'
-									? 'red'
-									: i < segments * 0.6
-										? 'green'
-										: i < segments * 0.88
-											? 'amber'
-											: 'red'}
-						<span class="seg" data-color={color} data-lit={lit}></span>
-					{/each}
+				<div class="row">
+					<span class="k">SEGMENTS</span>
+					<span class="vtext">{trim.segments.length}</span>
 				</div>
-				<div class="progress-readout">
-					{Math.round(exporter.progress * 100)}%
+				<div class="row">
+					<span class="k">DUR</span>
+					<Timecode time={trim.totalDuration} size={14} color="phosphor" />
+				</div>
+				<div class="row">
+					<span class="k">MODE</span>
+					<span class="vtext" data-hot={exportOptions.needsReencode}>
+						{exportOptions.needsReencode ? 'ENCODE' : 'COPY'}
+					</span>
 				</div>
 			</div>
 
-			<div class="status-row">
-				<LED
-					color={exporter.status === 'error' ? 'red' : exporter.status === 'done' ? 'green' : 'amber'}
-					on={true}
-					blink={exporter.status === 'loading' || exporter.status === 'encoding'}
-				/>
-				<span class="status-text">
-					{#if exporter.status === 'loading'}
-						LOADING FFMPEG CORE…
-					{:else if exporter.status === 'encoding'}
-						ENCODING…
-					{:else if exporter.status === 'done' && exporter.result}
-						READY · {fmtBytes(exporter.result.size)}
-					{:else if exporter.status === 'error'}
-						ERROR · {exporter.error ?? 'unknown'}
+			{#if configView}
+				<div class="options">
+					<div class="option-row">
+						<span class="olabel">SPEED</span>
+						<div class="segmented">
+							{#each speeds as s (s)}
+								<button
+									type="button"
+									class="seg-btn"
+									data-active={exportOptions.speed === s}
+									onclick={() => (exportOptions.speed = s)}
+								>
+									{s === 1 ? '1×' : `${s}×`}
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="option-row">
+						<span class="olabel">ASPECT</span>
+						<div class="segmented">
+							{#each aspects as a (a)}
+								<button
+									type="button"
+									class="seg-btn"
+									data-active={exportOptions.aspect === a}
+									onclick={() => (exportOptions.aspect = a)}
+								>
+									{a === 'source' ? 'SRC' : a}
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="option-row">
+						<span class="olabel">FORMAT</span>
+						<div class="segmented">
+							{#each formats as f (f)}
+								<button
+									type="button"
+									class="seg-btn"
+									data-active={exportOptions.format === f}
+									onclick={() => (exportOptions.format = f)}
+								>
+									{f.toUpperCase()}
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="option-row toggle-row">
+						<span class="olabel">MUTE AUDIO</span>
+						<button
+							type="button"
+							class="toggle"
+							onclick={() => (exportOptions.muteAudio = !exportOptions.muteAudio)}
+							aria-pressed={exportOptions.muteAudio}
+						>
+							<LED color="amber" on={exportOptions.muteAudio} />
+							<span class="tlbl" data-on={exportOptions.muteAudio}>
+								{exportOptions.muteAudio ? 'MUTED' : 'ACTIVE'}
+							</span>
+						</button>
+					</div>
+
+					{#if exportOptions.format === 'gif'}
+						<div class="hint">GIF encoding is CPU-heavy · capped at 15fps / 480px wide</div>
+					{:else if exportOptions.format === 'webm'}
+						<div class="hint">WebM re-encode with libvpx-vp9 — slower than MP4</div>
 					{/if}
-				</span>
-			</div>
+				</div>
+			{:else}
+				<div class="bar-wrap">
+					<div class="bar">
+						{#each Array(segs) as _, i (i)}
+							{@const ratio = (i + 1) / segs}
+							{@const lit = exporter.progress >= ratio - 1 / segs}
+							{@const color =
+								exporter.status === 'done'
+									? 'green'
+									: exporter.status === 'error'
+										? 'red'
+										: i < segs * 0.6
+											? 'green'
+											: i < segs * 0.88
+												? 'amber'
+												: 'red'}
+							<span class="seg" data-color={color} data-lit={lit}></span>
+						{/each}
+					</div>
+					<div class="progress-readout">
+						{Math.round(exporter.progress * 100)}%
+					</div>
+				</div>
+
+				<div class="status-row">
+					<LED
+						color={exporter.status === 'error'
+							? 'red'
+							: exporter.status === 'done'
+								? 'green'
+								: 'amber'}
+						on={true}
+						blink={exporter.status === 'loading' || exporter.status === 'encoding'}
+					/>
+					<span class="status-text">
+						{#if exporter.status === 'loading'}
+							LOADING FFMPEG CORE…
+						{:else if exporter.status === 'encoding'}
+							ENCODING…
+						{:else if exporter.status === 'done' && exporter.result}
+							READY · {fmtBytes(exporter.result.size)}
+						{:else if exporter.status === 'error'}
+							ERROR · {exporter.error ?? 'unknown'}
+						{/if}
+					</span>
+				</div>
+			{/if}
 
 			<div class="actions">
-				{#if exporter.status === 'done'}
+				{#if configView}
+					<KnobButton
+						label="START"
+						sublabel="[ENTER]"
+						accent="green"
+						size="lg"
+						active
+						onclick={startExport}
+					/>
+					<KnobButton label="CANCEL" sublabel="[ESC]" onclick={() => exporter.close()} />
+				{:else if exporter.status === 'done'}
 					<KnobButton
 						label="DOWNLOAD"
 						sublabel={downloadLabel}
@@ -154,25 +274,17 @@
 					/>
 					<KnobButton label="CLOSE" sublabel="[ESC]" onclick={dismiss} />
 				{:else if exporter.status === 'error'}
-					<KnobButton
-						label="RETRY"
-						sublabel="[E]"
-						accent="amber"
-						size="lg"
-						onclick={retry}
-					/>
+					<KnobButton label="RETRY" sublabel="[E]" accent="amber" size="lg" onclick={retry} />
 					<KnobButton label="CLOSE" sublabel="[ESC]" onclick={() => exporter.close()} />
 				{:else}
 					<KnobButton label="CANCEL" sublabel="[ESC]" accent="red" onclick={dismiss} />
 				{/if}
 			</div>
 
-			{#if exporter.logs.length > 0}
+			{#if !configView && exporter.logs.length > 0}
 				<details class="console-log">
 					<summary>FFMPEG LOG</summary>
-					<pre>
-{exporter.logs.slice(-12).join('\n')}
-					</pre>
+					<pre>{exporter.logs.slice(-12).join('\n')}</pre>
 				</details>
 			{/if}
 		</div>
@@ -181,7 +293,9 @@
 
 <svelte:window
 	onkeydown={(e) => {
-		if (e.key === 'Escape' && open) dismiss();
+		if (!open) return;
+		if (e.key === 'Escape') dismiss();
+		else if (e.key === 'Enter' && configView) startExport();
 	}}
 />
 
@@ -197,7 +311,7 @@
 	}
 
 	.panel {
-		width: min(480px, 92vw);
+		width: min(520px, 92vw);
 		padding: 22px 22px 20px;
 		background:
 			repeating-linear-gradient(
@@ -262,6 +376,126 @@
 		letter-spacing: 0.24em;
 		color: #5a6066;
 		text-transform: uppercase;
+	}
+
+	.vtext {
+		font-family: var(--font-data);
+		font-size: 12px;
+		letter-spacing: 0.14em;
+		color: var(--color-led-xenon);
+	}
+
+	.vtext[data-hot='true'] {
+		color: var(--color-led-amber);
+		text-shadow: 0 0 6px rgba(255, 180, 0, 0.5);
+	}
+
+	.options {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+		background: var(--color-well);
+		border-radius: var(--radius-panel);
+		box-shadow:
+			inset 0 2px 3px rgba(0, 0, 0, 0.8),
+			inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+	}
+
+	.option-row {
+		display: grid;
+		grid-template-columns: 80px 1fr;
+		gap: 10px;
+		align-items: center;
+	}
+
+	.olabel {
+		font-family: var(--font-data);
+		font-size: 10px;
+		letter-spacing: 0.24em;
+		color: #5a6066;
+		text-transform: uppercase;
+	}
+
+	.segmented {
+		display: flex;
+		gap: 2px;
+		padding: 2px;
+		background: #0a0b0c;
+		border-radius: 3px;
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+	}
+
+	.seg-btn {
+		flex: 1;
+		padding: 6px 8px;
+		background: linear-gradient(to bottom, #2a2e32, #1a1c1e);
+		border: 0;
+		color: #9aa3ab;
+		font-family: var(--font-data);
+		font-size: 10px;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		border-radius: 2px;
+		cursor: pointer;
+		transition:
+			background 120ms var(--ease-snap),
+			color 120ms,
+			box-shadow 120ms;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.04),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+	}
+
+	.seg-btn:hover {
+		color: var(--color-led-xenon);
+	}
+
+	.seg-btn[data-active='true'] {
+		background: linear-gradient(to bottom, #1a1c1e, #2a2e32);
+		color: var(--color-led-amber);
+		text-shadow: 0 0 6px rgba(255, 180, 0, 0.55);
+		box-shadow:
+			inset 0 2px 3px rgba(0, 0, 0, 0.7),
+			inset 0 0 0 1px rgba(255, 180, 0, 0.4);
+	}
+
+	.seg-btn:focus-visible {
+		outline: 1px solid var(--color-led-amber);
+		outline-offset: 1px;
+	}
+
+	.toggle-row .toggle {
+		justify-self: start;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		background: none;
+		border: 0;
+		padding: 4px 6px;
+		cursor: pointer;
+	}
+
+	.tlbl {
+		font-family: var(--font-data);
+		font-size: 10px;
+		letter-spacing: 0.22em;
+		color: #5a6066;
+		text-transform: uppercase;
+	}
+
+	.tlbl[data-on='true'] {
+		color: var(--color-led-amber);
+		text-shadow: 0 0 6px rgba(255, 180, 0, 0.5);
+	}
+
+	.hint {
+		font-family: var(--font-data);
+		font-size: 9px;
+		letter-spacing: 0.16em;
+		color: var(--color-led-amber);
+		text-transform: uppercase;
+		padding: 4px 2px;
 	}
 
 	.bar-wrap {
@@ -337,6 +571,7 @@
 	.actions {
 		display: flex;
 		justify-content: flex-end;
+		flex-wrap: wrap;
 		gap: 10px;
 	}
 

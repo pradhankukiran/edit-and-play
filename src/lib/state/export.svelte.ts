@@ -2,6 +2,39 @@ import { trimVideo, type Segment, type ExportOptions } from '$lib/media/ffmpeg';
 
 export type ExportStatus = 'idle' | 'loading' | 'encoding' | 'done' | 'error';
 
+export type Speed = 0.5 | 1 | 2 | 4;
+export type Aspect = 'source' | '16:9' | '9:16' | '1:1';
+export type Format = 'mp4' | 'webm' | 'gif';
+
+class ExportOptionsState {
+	speed = $state<Speed>(1);
+	aspect = $state<Aspect>('source');
+	muteAudio = $state(false);
+	format = $state<Format>('mp4');
+
+	needsReencode = $derived(
+		this.speed !== 1 || this.aspect !== 'source' || this.format !== 'mp4'
+	);
+
+	snapshot(): ExportOptions {
+		return {
+			speed: this.speed,
+			aspect: this.aspect,
+			muteAudio: this.muteAudio,
+			format: this.format
+		};
+	}
+
+	resetDefaults() {
+		this.speed = 1;
+		this.aspect = 'source';
+		this.muteAudio = false;
+		this.format = 'mp4';
+	}
+}
+
+export const exportOptions = new ExportOptionsState();
+
 interface ExportResult {
 	blob: Blob;
 	url: string;
@@ -16,12 +49,17 @@ interface ExportMeta {
 
 class ExportState {
 	status = $state<ExportStatus>('idle');
+	configuring = $state(false);
 	progress = $state(0);
 	error = $state<string | null>(null);
 	result = $state<ExportResult | null>(null);
 	logs = $state<string[]>([]);
 	abortCtrl: AbortController | null = null;
 	#inFlight: Promise<void> | null = null;
+
+	openConfig() {
+		this.configuring = true;
+	}
 
 	async start(
 		file: File,
@@ -34,6 +72,7 @@ class ExportState {
 			await this.#inFlight.catch(() => {});
 		}
 		this.reset();
+		this.configuring = false;
 		this.status = 'loading';
 		this.abortCtrl = new AbortController();
 		const signal = this.abortCtrl.signal;
@@ -102,6 +141,7 @@ class ExportState {
 		if (this.result) {
 			URL.revokeObjectURL(this.result.url);
 		}
+		this.configuring = false;
 		this.reset();
 	}
 
