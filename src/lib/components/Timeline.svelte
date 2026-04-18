@@ -233,6 +233,7 @@
 				percent={inPct}
 				time={trim.inPoint}
 				fps={player.fps}
+				duration={player.duration}
 				{trackEl}
 				onstart={onScrubStart}
 				onmove={(pct) => {
@@ -246,6 +247,7 @@
 				percent={outPct}
 				time={trim.outPoint}
 				fps={player.fps}
+				duration={player.duration}
 				{trackEl}
 				onstart={onScrubStart}
 				onmove={(pct) => {
@@ -257,6 +259,9 @@
 
 			<Playhead
 				percent={playheadPct}
+				time={player.currentTime}
+				fps={player.fps}
+				duration={player.duration}
 				{trackEl}
 				onscrubStart={onScrubStart}
 				onscrub={onScrub}

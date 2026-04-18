@@ -9,13 +9,14 @@
 		percent: number;
 		time: number;
 		fps: number;
+		duration: number;
 		trackEl: HTMLElement | null;
 		onmove?: (percent: number) => void;
 		onstart?: () => void;
 		onend?: () => void;
 	}
 
-	let { variant, percent, time, fps, trackEl, onmove, onstart, onend }: Props = $props();
+	let { variant, percent, time, fps, duration, trackEl, onmove, onstart, onend }: Props = $props();
 
 	let dragging = $state(false);
 
@@ -35,6 +36,46 @@
 		dragging = false;
 		onend?.();
 	}
+
+	function formatSMPTE(t: number): string {
+		const hh = Math.floor(t / 3600);
+		const mm = Math.floor((t % 3600) / 60);
+		const ss = Math.floor(t % 60);
+		const ff = Math.floor((t % 1) * fps);
+		return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}:${String(ff).padStart(2, '0')}`;
+	}
+
+	function nudge(delta: number) {
+		if (duration <= 0) return;
+		const next = Math.max(0, Math.min(duration, time + delta));
+		onmove?.(next / duration);
+	}
+
+	function onKeydown(e: KeyboardEvent) {
+		let handled = true;
+		const secondStep = 1;
+		const frameStep = 1 / fps;
+		switch (e.key) {
+			case 'ArrowLeft':
+				nudge(e.shiftKey ? -secondStep : -frameStep);
+				break;
+			case 'ArrowRight':
+				nudge(e.shiftKey ? secondStep : frameStep);
+				break;
+			case 'Home':
+				onmove?.(0);
+				break;
+			case 'End':
+				onmove?.(1);
+				break;
+			default:
+				handled = false;
+		}
+		if (handled) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
 </script>
 
 <div
@@ -53,8 +94,10 @@
 	tabindex="0"
 	aria-label="{variant === 'in' ? 'In' : 'Out'} trim point"
 	aria-valuemin="0"
-	aria-valuemax="1"
-	aria-valuenow={percent}
+	aria-valuemax={duration}
+	aria-valuenow={time}
+	aria-valuetext={formatSMPTE(time)}
+	onkeydown={onKeydown}
 >
 	<div class="bar"></div>
 	<div class="grip">

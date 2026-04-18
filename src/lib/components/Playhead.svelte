@@ -3,13 +3,25 @@
 
 	interface Props {
 		percent: number;
+		time: number;
+		fps: number;
+		duration: number;
 		trackEl: HTMLElement | null;
 		onscrub?: (percent: number) => void;
 		onscrubStart?: () => void;
 		onscrubEnd?: () => void;
 	}
 
-	let { percent, trackEl, onscrub, onscrubStart, onscrubEnd }: Props = $props();
+	let {
+		percent,
+		time,
+		fps,
+		duration,
+		trackEl,
+		onscrub,
+		onscrubStart,
+		onscrubEnd
+	}: Props = $props();
 
 	let dragging = $state(false);
 
@@ -29,6 +41,45 @@
 		dragging = false;
 		onscrubEnd?.();
 	}
+
+	function formatSMPTE(t: number): string {
+		const hh = Math.floor(t / 3600);
+		const mm = Math.floor((t % 3600) / 60);
+		const ss = Math.floor(t % 60);
+		const ff = Math.floor((t % 1) * fps);
+		return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}:${String(ff).padStart(2, '0')}`;
+	}
+
+	function nudge(delta: number) {
+		if (duration <= 0) return;
+		const next = Math.max(0, Math.min(duration, time + delta));
+		onscrub?.(next / duration);
+	}
+
+	function onKeydown(e: KeyboardEvent) {
+		let handled = true;
+		const frameStep = 1 / fps;
+		switch (e.key) {
+			case 'ArrowLeft':
+				nudge(e.shiftKey ? -1 : -frameStep);
+				break;
+			case 'ArrowRight':
+				nudge(e.shiftKey ? 1 : frameStep);
+				break;
+			case 'Home':
+				onscrub?.(0);
+				break;
+			case 'End':
+				onscrub?.(1);
+				break;
+			default:
+				handled = false;
+		}
+		if (handled) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	}
 </script>
 
 <div
@@ -46,8 +97,10 @@
 	tabindex="0"
 	aria-label="Playhead position"
 	aria-valuemin="0"
-	aria-valuemax="1"
-	aria-valuenow={percent}
+	aria-valuemax={duration}
+	aria-valuenow={time}
+	aria-valuetext={formatSMPTE(time)}
+	onkeydown={onKeydown}
 >
 	<div class="head"></div>
 	<div class="line"></div>
