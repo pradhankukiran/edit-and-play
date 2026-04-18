@@ -11,6 +11,7 @@
 	let thumbs = $state<Thumb[]>([]);
 	let loading = $state(false);
 	let peaks = $state<Float32Array | null>(null);
+	let wfStatus = $state<'idle' | 'loading' | 'done' | 'unavailable'>('idle');
 	let wfCanvas: HTMLCanvasElement;
 	let wfAbort: AbortController | null = null;
 	let thumbAbort: AbortController | null = null;
@@ -83,6 +84,7 @@
 		thumbs = [];
 		peaks = null;
 		loading = false;
+		wfStatus = 'idle';
 		waveform.clear();
 	}
 
@@ -111,6 +113,7 @@
 	async function runWaveform(file: File) {
 		wfAbort?.abort();
 		wfAbort = new AbortController();
+		wfStatus = 'loading';
 		try {
 			const result = await extractWaveform(file, {
 				peakCount: 2000,
@@ -118,8 +121,12 @@
 			});
 			peaks = result.peaks;
 			waveform.set(result.peaks, result.duration);
+			wfStatus = 'done';
 		} catch (err) {
-			if ((err as Error).name !== 'AbortError') console.warn('waveform failed', err);
+			const name = (err as Error).name;
+			if (name === 'AbortError') return;
+			wfStatus = 'unavailable';
+			console.warn('waveform unavailable', err);
 		}
 	}
 
@@ -172,8 +179,10 @@
 
 		<div class="waveform">
 			<canvas bind:this={wfCanvas}></canvas>
-			{#if !peaks && player.ready}
+			{#if player.ready && wfStatus === 'loading'}
 				<div class="wf-status">analyzing audio…</div>
+			{:else if player.ready && wfStatus === 'unavailable'}
+				<div class="wf-status" data-variant="muted">no audio track</div>
 			{/if}
 		</div>
 
@@ -356,6 +365,10 @@
 		letter-spacing: 0.22em;
 		color: var(--color-led-green-dim);
 		text-transform: uppercase;
+	}
+
+	.wf-status[data-variant='muted'] {
+		color: #3a3f44;
 	}
 
 	.perf {
