@@ -53,7 +53,7 @@
 	}
 
 	function retry() {
-		if (!player.file || trim.selected <= 0.05) return;
+		if (!player.file || trim.totalDuration <= 0.05) return;
 		void exporter.start(player.file, trim.inPoint, trim.outPoint);
 	}
 
@@ -94,7 +94,7 @@
 			<div class="meta">
 				<div class="row"><span class="k">IN</span><Timecode time={trim.inPoint} size={14} color="red" /></div>
 				<div class="row"><span class="k">OUT</span><Timecode time={trim.outPoint} size={14} color="amber" /></div>
-				<div class="row"><span class="k">DUR</span><Timecode time={trim.selected} size={14} color="phosphor" /></div>
+				<div class="row"><span class="k">DUR</span><Timecode time={trim.totalDuration} size={14} color="phosphor" /></div>
 			</div>
 
 			<div class="bar-wrap">
