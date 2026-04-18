@@ -58,9 +58,8 @@
 <style>
 	.viewport {
 		position: relative;
-		width: min(100%, calc((100dvh - 320px) * 16 / 9));
+		width: 100%;
 		aspect-ratio: 16 / 9;
-		margin: 0 auto;
 		background: #000;
 		overflow: hidden;
 		border-radius: var(--radius-panel);

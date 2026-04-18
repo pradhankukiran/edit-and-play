@@ -142,6 +142,9 @@
 		flex-direction: column;
 		gap: 16px;
 		min-width: 0;
+		width: 100%;
+		max-width: calc((100dvh - 320px) * 16 / 9);
+		margin: 0 auto;
 	}
 
 	.rail {
